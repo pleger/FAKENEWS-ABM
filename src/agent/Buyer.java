@@ -8,7 +8,6 @@ import gui.DataChart;
 import inputManager.Configuration;
 import inputManager.InnerBuyer;
 import utils.Console;
-import org.jetbrains.annotations.NotNull;
 import reporter.ReportRegister;
 import reporter.Reporter;
 import reporter.EndorsementData;
@@ -33,7 +32,7 @@ public class Buyer implements Step, FlyWeight, ReportRegister {
     private final DataChart data;
     private double currentMarketEvaluation;
 
-    Buyer(@NotNull InnerBuyer ib) {
+    Buyer(InnerBuyer ib) {
         this.ID = counter++;
         this.friends = new ArrayList<>();
         this.knownMarkets = new ArrayList<>();
@@ -52,7 +51,7 @@ public class Buyer implements Step, FlyWeight, ReportRegister {
 
     public void setFriends(List<Buyer> buyers) {
         int friendCounter = 0;
-        int friendSize = (int) (Configuration.CONTACTS * Configuration.FRIENDS);
+        int friendSize = Math.min((int) (Configuration.CONTACTS * Configuration.FRIENDS), Math.max(0, buyers.size() - 1));
 
         while (friendCounter < friendSize) {
             Buyer potentialContact = buyers.get((int) (Math.random() * buyers.size()));
@@ -63,7 +62,7 @@ public class Buyer implements Step, FlyWeight, ReportRegister {
     }
 
     private boolean addFriend(Buyer potentialContact) {
-        if (!friends.contains(potentialContact)) {
+        if (potentialContact != this && !friends.contains(potentialContact)) {
             friends.add(potentialContact);
             return true;
         }
@@ -80,6 +79,10 @@ public class Buyer implements Step, FlyWeight, ReportRegister {
 
     public int getID() {
         return ID;
+    }
+
+    static void resetCounter() {
+        counter = 0;
     }
 
     public DataChart getDataSeries() {
@@ -186,4 +189,3 @@ public class Buyer implements Step, FlyWeight, ReportRegister {
                 '}';
     }
 }
-

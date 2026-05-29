@@ -1,8 +1,7 @@
 package inputManager;
 
-import org.apache.commons.lang.ArrayUtils;
-
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class InnerMarket {
     public final String name;
@@ -28,7 +27,7 @@ public class InnerMarket {
         text.append("{quota:").append(quota).append("}");
 
         for (int i = 0; i < attributeNames.size(); ++i) {
-            String result = ArrayUtils.toString(attributeValues.get(i));
+            String result = Arrays.toString(attributeValues.get(i));
             text.append("{").append(attributeNames.get(i)).append(":").append(result).append("}");
         }
 

@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Configuration {
-    public final static String DEFAULT_FILE_NAME = "LIGHTINTHEBOX_AMAZON_2";
+    public final static String DEFAULT_FILE_NAME = "FAKENEWS_BASELINE";
     public final static int DISABLED = -1;
 
     private final static int D_PERIODS = 30;
@@ -90,10 +90,9 @@ public class Configuration {
 
     private static void creatingOutputFolder(String output) {
         try {
-            if (new File(output).mkdir()) {
-                Console.info("Directory was created: " + output);
-            } else {
-                Console.error("Directory was NOT create: " + output);
+            File dir = new File(output);
+            if (!dir.exists() && !dir.mkdirs()) {
+                System.out.println("Directory was NOT created: " + output);
             }
         } catch (SecurityException se) {
             Error.trigger("Directory cannot be created: " + output + "\n ERROR: " + se, se);
@@ -112,11 +111,12 @@ public class Configuration {
 
         //making the simulation directory
         try {
-            if (new File(OUTPUT_DIRECTORY).mkdir()) {
-                Console.info("Configuration.setPath: Directory was created: " + OUTPUT_DIRECTORY);
-            } else {
-                Console.error("Configuration.setPath: Directory was NOT create: " + OUTPUT_DIRECTORY);
+            File output = new File(OUTPUT_DIRECTORY);
+            if (!output.exists() && !output.mkdirs()) {
+                System.out.println("Configuration.setPath: Directory was NOT created: " + OUTPUT_DIRECTORY);
             }
+            Console.resetLogFile();
+            Console.info("Configuration.setPath: Directory ready: " + OUTPUT_DIRECTORY);
         } catch (SecurityException se) {
             Error.trigger("Configuration.setPath: Directory cannot be created: " + OUTPUT_DIRECTORY +
                     "Configuration.setPath: ERROR: " + se, se);

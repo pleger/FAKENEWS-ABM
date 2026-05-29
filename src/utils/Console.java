@@ -32,6 +32,16 @@ public class Console {
         }
     }
 
+    public static void resetLogFile() {
+        if (logger != null) {
+            for (java.util.logging.Handler handler : logger.getHandlers()) {
+                handler.close();
+                logger.removeHandler(handler);
+            }
+            logger = null;
+        }
+    }
+
     public static void end(Object msg) {
         info(msg);
         logger.getHandlers()[0].close();

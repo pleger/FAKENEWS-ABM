@@ -2,8 +2,6 @@ package endorsement;
 
 import inputManager.Configuration;
 import utils.Error;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Range;
 
 import java.util.function.BiFunction;
 
@@ -26,7 +24,7 @@ public class EndorsementEvalStrategies {
     }
 
 
-    public static Double BY_MAX(Double @NotNull [] attributes, Double mean) {
+    public static Double BY_MAX(Double[] attributes, Double mean) {
         int index = -1;
         double max = Double.MAX_VALUE*-1;
 
@@ -41,7 +39,7 @@ public class EndorsementEvalStrategies {
         return calculateEndorsementFormula(index + 1, mean, Configuration.LEVELS);
     }
 
-    public static Double BY_PROBABILITY(Double @NotNull [] attributes, Double mean) {
+    public static Double BY_PROBABILITY(Double[] attributes, Double mean) {
         double random = Math.random();
         double acc = 0;
         int index = -1;
@@ -64,7 +62,7 @@ public class EndorsementEvalStrategies {
      * @param levels maximum of levels
      * @return Formula of @Oswaldo
      */
-    private static Double calculateEndorsementFormula(@Range(from = 0, to = Integer.MAX_VALUE) int index, Double mean, int levels) {
+    private static Double calculateEndorsementFormula(int index, Double mean, int levels) {
         int k = (int) Math.floor(index - levels / 2.0);
         k = levels % 2 == 0 && k <= 0 ? k - 1 : k;
         double div = levels % 2 == 0 ? levels : levels - 1;

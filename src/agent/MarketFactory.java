@@ -14,6 +14,7 @@ public class MarketFactory {
     public static List<Market> createFromInput() {
         ArrayList<InnerMarket> innerMarkets =  Markets.getInnerMarkets();
         markets = new ArrayList<>();
+        Market.resetCounter();
         innerMarkets.iterator().forEachRemaining(innerMarket -> markets.add(new Market(innerMarket)));
         return markets;
     }

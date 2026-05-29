@@ -11,10 +11,10 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.zeroturnaround.zip.ZipUtil;
 import scenarios.ScenarioFactory;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.DateFormat;
@@ -24,15 +24,9 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
-import com.amazonaws.SdkClientException;
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 public class Reporter {
     private static final List<AgentDecisionData> agentDecisionData = new ArrayList<>();
     private static final List<DetailedAgentDecisionData> detailedAgentDecisionData = new ArrayList<>();
@@ -51,8 +45,8 @@ public class Reporter {
         if (Configuration.SCENARIO != Configuration.DISABLED) addSheet(workbook, Loader.getScenario());
 
 
-        writeSalesPerMarket(workbook.createSheet("SalesPerMarket"), salesPerMarketData);
-        writeSalesPerMarket(workbook.createSheet("SalesUniquePerMarket"), salesUniquePerMarketData);
+        writeSalesPerMarket(workbook.createSheet("RepostsPerSource"), salesPerMarketData);
+        writeSalesPerMarket(workbook.createSheet("UniqueRepostersPerSource"), salesUniquePerMarketData);
         writeAgentDecision(workbook.createSheet("Results"));
         writeDetailedAgentDecision(workbook.createSheet("DetailedResult"));
         writeEndorsements(workbook.createSheet("Endorsements"));
@@ -60,7 +54,6 @@ public class Reporter {
 
         Console.info("Reporter: Writing to the disk");
         writeDisk(workbook);
-        saveToS3();
     }
 
     private static void writeScenarioChanges(XSSFSheet scenarios) {
@@ -72,9 +65,9 @@ public class Reporter {
             ArrayList<Market> markets = MarketFactory.getMarkets();
 
             Row headRow = scenarios.createRow(0);
-            headRow.createCell(0).setCellValue("MARKET_NAME");
-            headRow.createCell(1).setCellValue("MARKET_ID");
-            headRow.createCell(2).setCellValue("MARKET_QUOTE");
+            headRow.createCell(0).setCellValue("SOURCE_NAME");
+            headRow.createCell(1).setCellValue("SOURCE_ID");
+            headRow.createCell(2).setCellValue("SOURCE_REACH");
 
             int column = 3;
             for (String attribute : markets.get(0).getAttributes().getNames()) {
@@ -129,7 +122,7 @@ public class Reporter {
     }
 
     private static void writeSalesPerMarket(XSSFSheet salesPerMarket, List<? extends SalesPerMarketData> sales) {
-        Console.info("Reporter: Adding Sales Per Market: " + sales.size());
+        Console.info("Reporter: Adding Reposts Per Source: " + sales.size());
         Row headRow = salesPerMarket.createRow(0);
 
         int column = 0;
@@ -268,8 +261,41 @@ public class Reporter {
     private static void compressFolder() {
         if (Configuration.COMPRESSED_RESULTS) {
             File compressedFile = new File(Configuration.OUTPUT_DIRECTORY + ".zip");
-            ZipUtil.pack(new File(Configuration.OUTPUT_DIRECTORY), compressedFile);
-            Console.info("Reporter: Folder compressed in: " + compressedFile.getAbsolutePath());
+            try {
+                zipFolder(new File(Configuration.OUTPUT_DIRECTORY), compressedFile);
+                Console.info("Reporter: Folder compressed in: " + compressedFile.getAbsolutePath());
+            } catch (IOException ex) {
+                Error.trigger("Output cannot be compressed: " + compressedFile.getAbsolutePath() + "\n.ERROR: " + ex, ex);
+            }
+        }
+    }
+
+    private static void zipFolder(File sourceFolder, File targetFile) throws IOException {
+        try (ZipOutputStream zip = new ZipOutputStream(new FileOutputStream(targetFile))) {
+            zipFile(sourceFolder, sourceFolder.getName(), zip);
+        }
+    }
+
+    private static void zipFile(File fileToZip, String fileName, ZipOutputStream zip) throws IOException {
+        if (fileToZip.isHidden()) {
+            return;
+        }
+        if (fileToZip.isDirectory()) {
+            File[] children = fileToZip.listFiles();
+            if (children != null) {
+                for (File childFile : children) {
+                    zipFile(childFile, fileName + "/" + childFile.getName(), zip);
+                }
+            }
+            return;
+        }
+        try (FileInputStream input = new FileInputStream(fileToZip)) {
+            zip.putNextEntry(new ZipEntry(fileName));
+            byte[] bytes = new byte[1024];
+            int length;
+            while ((length = input.read(bytes)) >= 0) {
+                zip.write(bytes, 0, length);
+            }
         }
     }
 
@@ -292,30 +318,5 @@ public class Reporter {
         }
     }
 
-    private static void saveToS3() {
-        if (Configuration.COMPRESSED_RESULTS) {
-            Console.info("Saving results (zip) in S3 Bucket");
-            File compressedFile = new File(inputManager.Configuration.OUTPUT_DIRECTORY + ".zip");
-            Console.info("Reporter: Folder compressed in: " + compressedFile.getAbsolutePath());
-            Regions clientRegion = Regions.SA_EAST_1;
-            String bucketName = "bucket-aws-sbabm";
-            String fileObjKeyName = compressedFile.getName();
-            String accessKey = "";
-            String secretKey = "";
-            try {
-                AWSCredentials credentials = new BasicAWSCredentials(accessKey, secretKey);
-                AmazonS3 s3Client = AmazonS3ClientBuilder.standard()
-                        .withCredentials(new AWSStaticCredentialsProvider(credentials))
-                        .withRegion(clientRegion)
-                        .build();
-                PutObjectRequest request = new PutObjectRequest(bucketName, fileObjKeyName, compressedFile);
-                s3Client.putObject(request);
-                Console.info("Reporter: File saved");
-            } catch (SdkClientException e) {
-                e.printStackTrace();
-            }
-        }
-    }
 }
-
 

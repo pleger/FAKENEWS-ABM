@@ -8,6 +8,7 @@ public class Markets {
     private final static ArrayList<InnerMarket> innerMarkets = new ArrayList<>();
 
     public static void set(HashMap<String, ArrayList<Double[]>> data, ArrayList<String> names, HashMap<String,Double> quota) {
+        innerMarkets.clear();
         for (String name : names) {
             innerMarkets.add(new InnerMarket(name, quota.get(name)));
         }

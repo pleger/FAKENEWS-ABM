@@ -3,7 +3,6 @@ package agent;
 import endorsement.AttributesMarket;
 import inputManager.InnerMarket;
 import utils.Console;
-import org.jetbrains.annotations.NotNull;
 import simulation.FlyWeight;
 
 import java.util.HashSet;
@@ -19,7 +18,7 @@ public class Market implements FlyWeight {
     private AttributesMarket attributes;
     private Set<Integer> uniqueBuyers;
 
-    Market(@NotNull InnerMarket innerMarket) {
+    Market(InnerMarket innerMarket) {
         this.ID = counter++;
         this.name = innerMarket.name;
         this.quota = innerMarket.quota;
@@ -31,6 +30,10 @@ public class Market implements FlyWeight {
 
     public int getID() {
         return ID;
+    }
+
+    static void resetCounter() {
+        counter = 0;
     }
 
     public String getName() {

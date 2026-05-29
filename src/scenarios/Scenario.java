@@ -5,11 +5,9 @@ import agent.MarketFactory;
 import endorsement.AttributesMarket;
 import inputManager.Configuration;
 import utils.Console;
-import utils.Error;
-import org.apache.commons.lang.StringUtils;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class Scenario {
     private final int id;
@@ -38,7 +36,7 @@ public class Scenario {
         return id;
     }
 
-    private static void copyAttributes(@NotNull Market from, @NotNull Market to, String[] names) {
+    private static void copyAttributes(Market from, Market to, String[] names) {
         AttributesMarket attFrom = from.getAttributes();
         AttributesMarket attTo = to.getAttributes();
         checkAttributes(attFrom, names);
@@ -48,22 +46,22 @@ public class Scenario {
         to.setAttributes(newAttTo);
     }
 
-    private static void checkAttributes(@NotNull AttributesMarket attm, String[] names) {
+    private static void checkAttributes(AttributesMarket attm, String[] names) {
         if (!attm.contains(names)) {
             Console.error("SCENARIO X: some attributes not found");
             System.exit(1);
         }
     }
 
-    private static void checkDifference(AttributesMarket oldAtt, AttributesMarket newAtt, String @NotNull [] names) {
+    private static void checkDifference(AttributesMarket oldAtt, AttributesMarket newAtt, String[] names) {
         for (String name : names) {
             Double[] oldValues = oldAtt.getValues(name);
             Double[] newValues = newAtt.getValues(name);
 
             for (int j = 0; j < oldValues.length; ++j) {
                 if (oldValues[j].equals(newValues[j])) {
-                    String oldTextValues = StringUtils.join(oldValues, ",");
-                    String newTextValues = StringUtils.join(newValues, ",");
+                    String oldTextValues = Arrays.toString(oldValues);
+                    String newTextValues = Arrays.toString(newValues);
                     Console.warn("No difference for " + name + " => Old values:["+ oldTextValues + "]  &  New values:[" + newTextValues + "] - Value's Index:"+j);
                 }
             }

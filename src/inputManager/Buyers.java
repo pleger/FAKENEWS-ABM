@@ -8,6 +8,7 @@ public class Buyers {
     private final static ArrayList<InnerBuyer> INNER_BUYERS = new ArrayList<>();
 
     public static void set(HashMap<String, Double> data) {
+        INNER_BUYERS.clear();
         InnerBuyer oneKindConsumer = new InnerBuyer();
 
         for (Map.Entry<String, Double> entry : data.entrySet()) {
@@ -38,4 +39,3 @@ public class Buyers {
         return text.toString();
     }
 }
-

@@ -1,0 +1,6 @@
+build/
+output/
+*.class
+*.log
+.DS_Store
+~$*.xlsx

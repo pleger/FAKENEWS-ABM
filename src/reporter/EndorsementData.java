@@ -24,8 +24,8 @@ public class EndorsementData {
         return new ArrayList<String>() {{
             add("SimulationId");
             add("Period");
-            add("BuyerId");
-            add("Market");
+            add("UserId");
+            add("Source");
             add("Attribute");
             add("Value");
         }};

@@ -1,6 +1,5 @@
 package inputManager;
 
-import org.apache.commons.lang.StringUtils;
 import utils.Console;
 import utils.Error;
 import org.apache.poi.ss.usermodel.Cell;
@@ -24,15 +23,13 @@ public class Loader {
     private static Sheet scenario;
 
     public static void load(String file) {
-        file = determineInputFileName(file);
-        Configuration.setPath(file);
-        Console.info("Loader: Reading input from: " + file);
-        read("input");
+        File input = determineInputFile(file);
+        Configuration.setPath(stripExtension(input.getName()));
+        Console.info("Loader: Reading input from: " + input.getPath());
+        read(input);
     }
 
-    private static void read(String folder) {
-        folder = folder.equals("") ? "" : folder + "/";
-        File file = new File(folder + Configuration.FILE_NAME + ".xlsx");
+    private static void read(File file) {
         try {
             FileInputStream fileStream = new FileInputStream(file);
             Workbook workbook = WorkbookFactory.create(fileStream);
@@ -61,13 +58,7 @@ public class Loader {
             Console.error("Loader.read: Input cannot be open: " + file.getAbsolutePath());
             Console.error("Loader.read: ERROR: " + ex);
             ex.printStackTrace();
-
-            if (folder.equals("input")) {
-                Console.info("Loader: Trying the root folder");
-                Loader.read("");
-            } else {
-                System.exit(1);
-            }
+            System.exit(1);
         }
     }
 
@@ -77,7 +68,8 @@ public class Loader {
             names.append(workbook.getSheetName(i)).append(",");
         }
         
-        Console.info("Loader: Sheets available in the input file: " + StringUtils.chop(names.toString()));
+        String text = names.length() > 0 ? names.substring(0, names.length() - 1) : "";
+        Console.info("Loader: Sheets available in the input file: " + text);
     }
 
     private static void readScenario(Sheet scenario) {
@@ -174,7 +166,7 @@ public class Loader {
         return buyers;
     }
 
-    private static String determineInputFileName(String inputFileName) {
+    private static File determineInputFile(String inputFileName) {
         inputFileName = inputFileName.equals("") ? "" : inputFileName;
 
         if (inputFileName.equals("")) {
@@ -186,7 +178,29 @@ public class Loader {
             }
         }
 
-        return inputFileName.equals("")? Configuration.DEFAULT_FILE_NAME: inputFileName;
+        inputFileName = inputFileName.equals("") ? Configuration.DEFAULT_FILE_NAME : inputFileName;
+        ArrayList<File> candidates = new ArrayList<>();
+        File given = new File(inputFileName);
+        candidates.add(given);
+        if (!inputFileName.toLowerCase().endsWith(".xlsx")) {
+            candidates.add(new File(inputFileName + ".xlsx"));
+            candidates.add(new File("input", inputFileName + ".xlsx"));
+            candidates.add(new File("inputs", inputFileName + ".xlsx"));
+        } else {
+            candidates.add(new File("input", inputFileName));
+            candidates.add(new File("inputs", inputFileName));
+        }
+
+        for (File candidate : candidates) {
+            if (candidate.exists()) {
+                return candidate;
+            }
+        }
+        return given;
+    }
+
+    private static String stripExtension(String name) {
+        return name.toLowerCase().endsWith(".xlsx") ? name.substring(0, name.length() - 5) : name;
     }
 
     private static void verifyLoadedSheet(Sheet sheet, String name) {
