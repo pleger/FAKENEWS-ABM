@@ -2,6 +2,15 @@
 
 FAKENEWS-ABM is an agent-based model for simulating the dissemination of fake news on Social Network Sites (SNSs) such as X or Instagram.
 
+## Project Context
+
+This software supports the PLURALISMO project `PLU230018`, **Evaluacion de Estrategias para Diseminar Fake News Usando Inteligencia Artificial**.
+
+- Responsible researcher: Paul Leger, Associate Professor, Universidad Catolica del Norte (UCN).
+- Research team: Paul Leger, Agustin Olivares, Oswaldo Teran, Manuela Lopez, Francis Espinoza, and Carolina Rodriguez.
+
+The project studies how fake news spreads through social network sites and how computational simulation can help evaluate dissemination and mitigation strategies. FAKENEWS-ABM contributes an agent-based simulation environment based on Endorsement theory, using SNS users, news sources, source credibility, message features, social sharing, and scenario interventions as the core modeling elements.
+
 The model uses Endorsement theory to represent how SNS users evaluate news sources and decide whether to repost news:
 
 - `SNSUser` agents represent SNS users;
@@ -11,7 +20,7 @@ The model uses Endorsement theory to represent how SNS users evaluate news sourc
 - word of mouth becomes contact-based social sharing;
 - endorsement attributes come from `datos para simulacion.xlsx`.
 
-FAKENEWS-ABM is designed for the PLURALISMO project line on evaluating strategies to disseminate fake news using artificial intelligence. In that context, the ABM provides a computational laboratory for comparing how source credibility, content framing, source reach, user contacts, and scenario interventions affect fake-news diffusion.
+In this context, the ABM provides a computational laboratory for comparing how source credibility, content framing, source reach, user contacts, and scenario interventions affect fake-news diffusion.
 
 ## Model
 
