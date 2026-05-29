@@ -7,18 +7,18 @@ import java.util.function.BiFunction;
 
 public class EndorsementEvalStrategies {
 
-    public static double[] evaluate(AttributesMarket amarkets, AttributesBuyer abuyer, BiFunction<Double[], Double, Double> strategy) {
-        int attributesNumber = amarkets.size();
+    public static double[] evaluate(AttributesNewsSource anewsSources, AttributesSNSUser asnsUser, BiFunction<Double[], Double, Double> strategy) {
+        int attributesNumber = anewsSources.size();
         double[] results = new double[attributesNumber];
 
-        Error.setAssert(Configuration.ATTRIBUTES_M == attributesNumber, "EndorsementEvaluation: Wrong number of attributes of market");
+        Error.setAssert(Configuration.ATTRIBUTES_SOURCE == attributesNumber, "EndorsementEvaluation: Wrong number of attributes of newsSource");
 
         for (int i = 0; i < attributesNumber; ++i) {
-            String nameAtt = amarkets.getName(i);
-            Double[] valuesMarket = amarkets.getValues(nameAtt);
-            Double valueBuyer = abuyer.getValue(nameAtt);
+            String nameAtt = anewsSources.getName(i);
+            Double[] valuesNewsSource = anewsSources.getValues(nameAtt);
+            Double valueSNSUser = asnsUser.getValue(nameAtt);
 
-            results[i] = strategy.apply(valuesMarket, valueBuyer);
+            results[i] = strategy.apply(valuesNewsSource, valueSNSUser);
         }
         return results;
     }
@@ -58,7 +58,7 @@ public class EndorsementEvalStrategies {
 
     /**
      * @param index  index of levels
-     * @param mean   mean of buyers
+     * @param mean   mean of snsUsers
      * @param levels maximum of levels
      * @return Formula of @Oswaldo
      */

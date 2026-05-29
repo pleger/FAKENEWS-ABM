@@ -6,15 +6,15 @@ import java.util.List;
 public class AgentDecisionData {
     public final int simulationId;
     public final int period;
-    public final int buyerId;
-    public final String marketName;
+    public final int snsUserId;
+    public final String newsSourceName;
     public final double evaluation;
 
-    public AgentDecisionData(int simulationId, int period, int buyerId, String marketName, double evaluation) {
+    public AgentDecisionData(int simulationId, int period, int snsUserId, String newsSourceName, double evaluation) {
         this.simulationId = simulationId;
         this.period = period;
-        this.buyerId = buyerId;
-        this.marketName = marketName;
+        this.snsUserId = snsUserId;
+        this.newsSourceName = newsSourceName;
         this.evaluation = evaluation;
     }
 

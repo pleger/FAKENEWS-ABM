@@ -1,13 +1,13 @@
 # FAKENEWS-ABM
 
-FAKENEWS-ABM is a fork of `pragmaticslaboratory/SBABM` adapted from cross-border B2C e-commerce to the dissemination of fake news on Social Network Sites (SNSs) such as X or Instagram.
+FAKENEWS-ABM is a fork of `pragmaticslaboratory/SBABM` adapted from a product-purchase ABM to the dissemination of fake news on Social Network Sites (SNSs) such as X or Instagram.
 
-The original model represents buyers, e-commerce marketplaces, word of mouth, and Endorsement theory. This fork keeps the agent-based simulation core but changes the interpretation:
+The fork keeps the agent-based simulation core and Endorsement theory, but changes the domain model:
 
-- buyers become SNS users;
-- marketplaces become news-source types, such as traditional media, unknown online media, fake-news sources, and mixed sources;
-- purchases become repost decisions;
-- market share becomes repost share;
+- `SNSUser` agents represent SNS users;
+- `NewsSource` objects represent source types, such as traditional media, unknown online media, fake-news sources, and mixed sources;
+- each period, a user's selected source represents a repost decision;
+- source selection share becomes repost share;
 - word of mouth becomes contact-based social sharing;
 - endorsement attributes come from `datos para simulacion.xlsx`.
 
@@ -44,9 +44,9 @@ Generated fake-news inputs:
 Workbook sheets:
 
 - `Configuration`: simulation controls such as `PERIODS`, `AGENTS`, `REPETITIONS`, `WOM`, and report flags.
-- `Markets`: source-type endorsement distributions. The original sheet name is preserved for code compatibility.
-- `Buyers`: SNS-user endorsement weights. The original sheet name is preserved for code compatibility.
-- `MarketQuota`: source reach or visibility probability.
+- `NewsSources`: source-type endorsement distributions.
+- `SNSUsers`: SNS-user endorsement weights.
+- `SourceReach`: source reach or visibility probability.
 - `Scenario`: optional custom intervention. Use `SCENARIO=-2` and one row with `FROM`, `TO`, `START_PERIOD`, then attribute names to copy.
 
 ## CLI
@@ -106,7 +106,7 @@ Each run writes a timestamped folder under `output/`. The output workbook includ
 - `Endorsements`;
 - `ScenarioChanges`.
 
-The Java class names still include some inherited e-commerce terms (`Buyer`, `Market`, `SalesPerMarketData`) to keep the fork small and traceable. User-facing CLI, README, generated inputs, and report sheets use the SNS/fake-news vocabulary.
+The source code now uses PLURALISMO/SNS vocabulary for the main domain types: `SNSUser`, `NewsSource`, `NewsSourceFactory`, `SNSUserFactory`, `RepostsPerSourceData`, and related input/report classes.
 
 ## License
 

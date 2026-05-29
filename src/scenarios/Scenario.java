@@ -1,8 +1,8 @@
 package scenarios;
 
-import agent.Market;
-import agent.MarketFactory;
-import endorsement.AttributesMarket;
+import agent.NewsSource;
+import agent.NewsSourceFactory;
+import endorsement.AttributesNewsSource;
 import inputManager.Configuration;
 import utils.Console;
 
@@ -28,7 +28,7 @@ public class Scenario {
     public void apply(int period) {
         if (period == this.start || period == -1) {
             Console.info("ScenarioManager: Applying Scenario " + Configuration.SCENARIO +"  [" + this + "]");
-            copyAttributes(MarketFactory.getMarket(from), MarketFactory.getMarket(to), atts);
+            copyAttributes(NewsSourceFactory.getNewsSource(from), NewsSourceFactory.getNewsSource(to), atts);
         }
     }
 
@@ -36,24 +36,24 @@ public class Scenario {
         return id;
     }
 
-    private static void copyAttributes(Market from, Market to, String[] names) {
-        AttributesMarket attFrom = from.getAttributes();
-        AttributesMarket attTo = to.getAttributes();
+    private static void copyAttributes(NewsSource from, NewsSource to, String[] names) {
+        AttributesNewsSource attFrom = from.getAttributes();
+        AttributesNewsSource attTo = to.getAttributes();
         checkAttributes(attFrom, names);
 
-        AttributesMarket newAttTo = attTo.replaceAll(names, attFrom);
+        AttributesNewsSource newAttTo = attTo.replaceAll(names, attFrom);
         checkDifference(attTo, newAttTo, names);
         to.setAttributes(newAttTo);
     }
 
-    private static void checkAttributes(AttributesMarket attm, String[] names) {
+    private static void checkAttributes(AttributesNewsSource attm, String[] names) {
         if (!attm.contains(names)) {
             Console.error("SCENARIO X: some attributes not found");
             System.exit(1);
         }
     }
 
-    private static void checkDifference(AttributesMarket oldAtt, AttributesMarket newAtt, String[] names) {
+    private static void checkDifference(AttributesNewsSource oldAtt, AttributesNewsSource newAtt, String[] names) {
         for (String name : names) {
             Double[] oldValues = oldAtt.getValues(name);
             Double[] newValues = newAtt.getValues(name);

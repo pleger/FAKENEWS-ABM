@@ -1,6 +1,6 @@
-import agent.BuyerFactory;
-import agent.Market;
-import agent.MarketFactory;
+import agent.SNSUserFactory;
+import agent.NewsSource;
+import agent.NewsSourceFactory;
 import endorsement.EndorsementEvalStrategies;
 import inputManager.Configuration;
 import inputManager.Loader;
@@ -19,7 +19,7 @@ public class TestRunner {
     private static void testEndorsementFormulaForHighBinaryLevel() {
         Configuration.LEVELS = 2;
         double value = EndorsementEvalStrategies.BY_MAX(new Double[]{0.1, 0.9}, 4.0);
-        assertEquals("binary high endorsement should equal buyer weight", 4.0, value, 0.0001);
+        assertEquals("binary high endorsement should equal snsUser weight", 4.0, value, 0.0001);
         passed++;
     }
 
@@ -27,17 +27,17 @@ public class TestRunner {
         Loader.load("FAKENEWS_BASELINE");
         assertEquals("configured agent count", 120, Configuration.AGENTS);
         Configuration.AGENTS = 3;
-        assertEquals("source count", 4, MarketFactory.createFromInput().size());
-        assertEquals("agent factory override", 3, BuyerFactory.createFromInput().size());
-        assertEquals("attribute count", 13, Configuration.ATTRIBUTES_M);
+        assertEquals("source count", 4, NewsSourceFactory.createFromInput().size());
+        assertEquals("agent factory override", 3, SNSUserFactory.createFromInput().size());
+        assertEquals("attribute count", 13, Configuration.ATTRIBUTES_SOURCE);
         passed++;
     }
 
     private static void testCustomizedScenarioCopiesSelectedAttributes() {
         Loader.load("FAKENEWS_COORDINATED_PUSH");
-        MarketFactory.createFromInput();
-        Market fake = MarketFactory.getMarket("FAKE_NEWS_SOURCE");
-        Market unknown = MarketFactory.getMarket("UNKNOWN_MEDIA");
+        NewsSourceFactory.createFromInput();
+        NewsSource fake = NewsSourceFactory.getNewsSource("FAKE_NEWS_SOURCE");
+        NewsSource unknown = NewsSourceFactory.getNewsSource("UNKNOWN_MEDIA");
         Double[] fakeSensationalism = fake.getAttributes().getValues("SENSACIONALISMO DE LA NOTICIA");
         Double[] oldUnknownSensationalism = unknown.getAttributes().getValues("SENSACIONALISMO DE LA NOTICIA");
 

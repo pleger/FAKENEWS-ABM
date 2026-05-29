@@ -17,9 +17,9 @@ import java.util.HashMap;
 
 public class Loader {
     private static Sheet configuration;
-    private static Sheet markets;
-    private static Sheet buyers;
-    private static Sheet marketQuota;
+    private static Sheet newsSources;
+    private static Sheet snsUsers;
+    private static Sheet sourceReach;
     private static Sheet scenario;
 
     public static void load(String file) {
@@ -38,22 +38,22 @@ public class Loader {
             configuration = workbook.getSheet("Configuration");
             Configuration.set(readConfiguration(getConfiguration()));
 
-            markets = workbook.getSheet("Markets");
-            buyers = workbook.getSheet("Buyers");
-            marketQuota = workbook.getSheet("MarketQuota");
+            newsSources = workbook.getSheet("NewsSources");
+            snsUsers = workbook.getSheet("SNSUsers");
+            sourceReach = workbook.getSheet("SourceReach");
             scenario =  (Configuration.SCENARIO != Configuration.DISABLED)? workbook.getSheet("Scenario"): null;
 
 
 
-            Markets.set(readMarketAttributes(getMarkets(), Configuration.LEVELS),
-                    readMarketNames(getMarkets(), Configuration.LEVELS),
-                    readMarketQuota(getMarketQuote()));
+            NewsSources.set(readNewsSourceAttributes(getNewsSources(), Configuration.LEVELS),
+                    readNewsSourceNames(getNewsSources(), Configuration.LEVELS),
+                    readSourceReach(getSourceReach()));
 
-            Buyers.set(readBuyers(getBuyers()));
+            SNSUsers.set(readSNSUsers(getSNSUsers()));
             if (Configuration.SCENARIO != Configuration.DISABLED) readScenario(getScenario());
 
-            Configuration.setAttributes(Markets.attributeSize(), Buyers.attributeSize());
-            Configuration.setMarkets(Markets.getInnerMarkets().size());
+            Configuration.setAttributes(NewsSources.attributeSize(), SNSUsers.attributeSize());
+            Configuration.setNewsSources(NewsSources.getInnerNewsSources().size());
         } catch (Exception ex) {
             Console.error("Loader.read: Input cannot be open: " + file.getAbsolutePath());
             Console.error("Loader.read: ERROR: " + ex);
@@ -92,14 +92,14 @@ public class Loader {
     }
 
 
-    private static HashMap<String, Double> readMarketQuota(Sheet marketQuota) {
-        Console.info("Loader: Reading Market Quota");
-        HashMap<String, Double> quota = new HashMap<>();
+    private static HashMap<String, Double> readSourceReach(Sheet sourceReach) {
+        Console.info("Loader: Reading NewsSource Reach");
+        HashMap<String, Double> reach = new HashMap<>();
 
-        for (Row row : marketQuota) {
-            quota.put(row.getCell(0).getStringCellValue().toUpperCase(), row.getCell(1).getNumericCellValue() / 100.0);
+        for (Row row : sourceReach) {
+            reach.put(row.getCell(0).getStringCellValue().toUpperCase(), row.getCell(1).getNumericCellValue() / 100.0);
         }
-        return quota;
+        return reach;
     }
 
     private static HashMap<String, Double> readConfiguration(Sheet conf) {
@@ -111,28 +111,28 @@ public class Loader {
         return confs;
     }
 
-    private static ArrayList<String> readMarketNames(Sheet market, int levels) {
-        ArrayList<String> marketNames = new ArrayList<>();
+    private static ArrayList<String> readNewsSourceNames(Sheet newsSource, int levels) {
+        ArrayList<String> newsSourceNames = new ArrayList<>();
 
-        for (Row row : market) {
+        for (Row row : newsSource) {
             if (row.getRowNum() == 1) {
                 for (Cell cell : row) {
                     if (cell.getColumnIndex() > 0 && (cell.getColumnIndex() + 1) % levels == 0) {
-                        marketNames.add(cell.getStringCellValue().toUpperCase());
+                        newsSourceNames.add(cell.getStringCellValue().toUpperCase());
                     }
                 }
             }
         }
-        return marketNames;
+        return newsSourceNames;
     }
 
-    private static HashMap<String, ArrayList<Double[]>> readMarketAttributes(Sheet market, int levels) {
-        Console.info("Loader: Reading Market Attributes");
+    private static HashMap<String, ArrayList<Double[]>> readNewsSourceAttributes(Sheet newsSource, int levels) {
+        Console.info("Loader: Reading NewsSource Attributes");
         HashMap<String, ArrayList<Double[]>> datas = new HashMap<>();
         ArrayList<Double> endor = new ArrayList<>();
         ArrayList<Double[]> endors = new ArrayList<>();
 
-        for (Row row : market) {
+        for (Row row : newsSource) {
             String name = "NO NAME";
 
             //get data from attributes
@@ -157,13 +157,13 @@ public class Loader {
         return datas;
     }
 
-    private static HashMap<String, Double> readBuyers(Sheet buyer) {
-        Console.info("Loader: Reading Buyers");
-        HashMap<String, Double> buyers = new HashMap<>();
-        for (Row row : buyer) {
-            buyers.put(row.getCell(0).getStringCellValue().toUpperCase(), row.getCell(1).getNumericCellValue());
+    private static HashMap<String, Double> readSNSUsers(Sheet snsUser) {
+        Console.info("Loader: Reading SNSUsers");
+        HashMap<String, Double> snsUsers = new HashMap<>();
+        for (Row row : snsUser) {
+            snsUsers.put(row.getCell(0).getStringCellValue().toUpperCase(), row.getCell(1).getNumericCellValue());
         }
-        return buyers;
+        return snsUsers;
     }
 
     private static File determineInputFile(String inputFileName) {
@@ -207,19 +207,19 @@ public class Loader {
         if (sheet == null) Error.trigger("Sheet '"+name+"' has not been loaded");
     }
 
-    public static Sheet getBuyers() {
-        verifyLoadedSheet(buyers, "Buyers");
-        return buyers;
+    public static Sheet getSNSUsers() {
+        verifyLoadedSheet(snsUsers, "SNSUsers");
+        return snsUsers;
     }
 
-    public static Sheet getMarkets() {
-        verifyLoadedSheet(markets, "Markets");
-        return markets;
+    public static Sheet getNewsSources() {
+        verifyLoadedSheet(newsSources, "NewsSources");
+        return newsSources;
     }
 
-    public static Sheet getMarketQuote() {
-        verifyLoadedSheet(marketQuota, "MarketQuota");
-        return marketQuota;
+    public static Sheet getSourceReach() {
+        verifyLoadedSheet(sourceReach, "SourceReach");
+        return sourceReach;
     }
 
     public static Sheet getScenario() {

@@ -1,7 +1,7 @@
 package reporter;
 
-import agent.Market;
-import agent.MarketFactory;
+import agent.NewsSource;
+import agent.NewsSourceFactory;
 import inputManager.Configuration;
 import inputManager.Loader;
 import utils.Console;
@@ -31,22 +31,22 @@ public class Reporter {
     private static final List<AgentDecisionData> agentDecisionData = new ArrayList<>();
     private static final List<DetailedAgentDecisionData> detailedAgentDecisionData = new ArrayList<>();
     private static final List<EndorsementData> endorsData = new ArrayList<>();
-    private static final List<SalesPerMarketData> salesPerMarketData = new ArrayList<>();
-    private static final List<SalesUniquePerMarketData> salesUniquePerMarketData = new ArrayList<>();
+    private static final List<RepostsPerSourceData> repostsPerNewsSourceData = new ArrayList<>();
+    private static final List<UniqueRepostersPerSourceData> repostsUniquePerNewsSourceData = new ArrayList<>();
 
     public static void write() {
         XSSFWorkbook workbook = new XSSFWorkbook();
         Console.info("Reporter: Adding sheets");
 
         writeConfiguration(workbook.createSheet("Configuration"));
-        addSheet(workbook, Loader.getMarkets());
-        addSheet(workbook, Loader.getBuyers());
-        addSheet(workbook, Loader.getMarketQuote());
+        addSheet(workbook, Loader.getNewsSources());
+        addSheet(workbook, Loader.getSNSUsers());
+        addSheet(workbook, Loader.getSourceReach());
         if (Configuration.SCENARIO != Configuration.DISABLED) addSheet(workbook, Loader.getScenario());
 
 
-        writeSalesPerMarket(workbook.createSheet("RepostsPerSource"), salesPerMarketData);
-        writeSalesPerMarket(workbook.createSheet("UniqueRepostersPerSource"), salesUniquePerMarketData);
+        writeRepostsPerNewsSource(workbook.createSheet("RepostsPerSource"), repostsPerNewsSourceData);
+        writeRepostsPerNewsSource(workbook.createSheet("UniqueRepostersPerSource"), repostsUniquePerNewsSourceData);
         writeAgentDecision(workbook.createSheet("Results"));
         writeDetailedAgentDecision(workbook.createSheet("DetailedResult"));
         writeEndorsements(workbook.createSheet("Endorsements"));
@@ -62,7 +62,7 @@ public class Reporter {
 
         if (enabled) {
             ScenarioFactory.get(Configuration.SCENARIO).apply(-1);
-            ArrayList<Market> markets = MarketFactory.getMarkets();
+            ArrayList<NewsSource> newsSources = NewsSourceFactory.getNewsSources();
 
             Row headRow = scenarios.createRow(0);
             headRow.createCell(0).setCellValue("SOURCE_NAME");
@@ -70,17 +70,17 @@ public class Reporter {
             headRow.createCell(2).setCellValue("SOURCE_REACH");
 
             int column = 3;
-            for (String attribute : markets.get(0).getAttributes().getNames()) {
+            for (String attribute : newsSources.get(0).getAttributes().getNames()) {
                 headRow.createCell(column).setCellValue(attribute);
                 ++column;
             }
 
             int rowIndex = 1;
-            for (Market mk : markets) {
+            for (NewsSource mk : newsSources) {
                 Row dataRow = scenarios.createRow(rowIndex);
                 dataRow.createCell(0).setCellValue(mk.getName());
                 dataRow.createCell(1).setCellValue(mk.getID());
-                dataRow.createCell(2).setCellValue(mk.getQuota());
+                dataRow.createCell(2).setCellValue(mk.getReach());
 
                 column = 3;
                 for (String attributeName : mk.getAttributes().getNames()) {
@@ -91,7 +91,7 @@ public class Reporter {
                 ++rowIndex;
             }
 
-            for (int i = 0; i < 3 + markets.get(0).getAttributes().getNames().length; ++i) {
+            for (int i = 0; i < 3 + newsSources.get(0).getAttributes().getNames().length; ++i) {
                 scenarios.autoSizeColumn(i);
             }
         }
@@ -101,45 +101,45 @@ public class Reporter {
         if (Configuration.SAVED_ENDORSEMENTS) endorsData.addAll(endors);
     }
 
-    public static void addAgentDecisionData(int simulationId, int period, int buyerId, String marketName, double evaluation) {
+    public static void addAgentDecisionData(int simulationId, int period, int snsUserId, String newsSourceName, double evaluation) {
         if (Configuration.SAVED_AGENT_DECISIONS)
-            agentDecisionData.add(new AgentDecisionData(simulationId, period, buyerId, marketName, evaluation));
+            agentDecisionData.add(new AgentDecisionData(simulationId, period, snsUserId, newsSourceName, evaluation));
     }
 
-    public static void addDetailedAgentDecisionData(int simulationId, int period, int buyerId, String marketName, double evaluation) {
+    public static void addDetailedAgentDecisionData(int simulationId, int period, int snsUserId, String newsSourceName, double evaluation) {
         if (Configuration.SAVED_DETAILED_AGENT_DECISIONS)
-            detailedAgentDecisionData.add(new DetailedAgentDecisionData(simulationId, period, buyerId, marketName, evaluation));
+            detailedAgentDecisionData.add(new DetailedAgentDecisionData(simulationId, period, snsUserId, newsSourceName, evaluation));
     }
 
-    public static void addSalesByMarketData(int simulationId, int period, int[] sales) {
-        if (Configuration.SAVED_SALES_PER_MARKET)
-            salesPerMarketData.add(new SalesPerMarketData(simulationId, period, sales));
+    public static void addRepostsByNewsSourceData(int simulationId, int period, int[] reposts) {
+        if (Configuration.SAVED_REPOSTS_PER_SOURCE)
+            repostsPerNewsSourceData.add(new RepostsPerSourceData(simulationId, period, reposts));
     }
 
-    public static void addSalesUniqueByMarketData(int simulationId, int period, int[] sales) {
-        if (Configuration.SAVED_SALES_PER_MARKET)
-            salesUniquePerMarketData.add(new SalesUniquePerMarketData(simulationId,period,sales));
+    public static void addRepostsUniqueByNewsSourceData(int simulationId, int period, int[] reposts) {
+        if (Configuration.SAVED_REPOSTS_PER_SOURCE)
+            repostsUniquePerNewsSourceData.add(new UniqueRepostersPerSourceData(simulationId,period,reposts));
     }
 
-    private static void writeSalesPerMarket(XSSFSheet salesPerMarket, List<? extends SalesPerMarketData> sales) {
-        Console.info("Reporter: Adding Reposts Per Source: " + sales.size());
-        Row headRow = salesPerMarket.createRow(0);
+    private static void writeRepostsPerNewsSource(XSSFSheet repostsPerNewsSource, List<? extends RepostsPerSourceData> reposts) {
+        Console.info("Reporter: Adding Reposts Per Source: " + reposts.size());
+        Row headRow = repostsPerNewsSource.createRow(0);
 
         int column = 0;
-        for (String head : SalesPerMarketData.getHeader()) {
+        for (String head : RepostsPerSourceData.getHeader()) {
             Cell cell = headRow.createCell(column);
             cell.setCellValue(head);
             ++column;
         }
 
         int rowIndex = 1;
-        for (SalesPerMarketData oneRow : sales) {
-            Row dataRow = salesPerMarket.createRow(rowIndex);
+        for (RepostsPerSourceData oneRow : reposts) {
+            Row dataRow = repostsPerNewsSource.createRow(rowIndex);
             dataRow.createCell(0).setCellValue(oneRow.simulationId);
             dataRow.createCell(1).setCellValue(oneRow.period);
 
-            for (int i = 0; i < oneRow.sales.length; ++i) {
-                dataRow.createCell(2 + i).setCellValue(oneRow.sales[i]);
+            for (int i = 0; i < oneRow.reposts.length; ++i) {
+                dataRow.createCell(2 + i).setCellValue(oneRow.reposts[i]);
             }
             ++rowIndex;
         }
@@ -161,8 +161,8 @@ public class Reporter {
             Row dataRow = detailedResults.createRow(rowIndex);
             dataRow.createCell(0).setCellValue(oneRow.simulationId);
             dataRow.createCell(1).setCellValue(oneRow.period);
-            dataRow.createCell(2).setCellValue(oneRow.buyerId);
-            dataRow.createCell(3).setCellValue(oneRow.marketName);
+            dataRow.createCell(2).setCellValue(oneRow.snsUserId);
+            dataRow.createCell(3).setCellValue(oneRow.newsSourceName);
             dataRow.createCell(4).setCellValue(oneRow.evaluation);
             ++rowIndex;
         }
@@ -188,8 +188,8 @@ public class Reporter {
         }
     }
 
-    public static List<? extends SalesPerMarketData> getSalesPerMarketData() {
-        return salesUniquePerMarketData;
+    public static List<? extends RepostsPerSourceData> getRepostsPerSourceData() {
+        return repostsUniquePerNewsSourceData;
     }
 
     private static void writeEndorsements(Sheet results) {
@@ -208,8 +208,8 @@ public class Reporter {
             Row dataRow = results.createRow(rowIndex);
             dataRow.createCell(0).setCellValue(oneRow.simulationId);
             dataRow.createCell(1).setCellValue(oneRow.period);
-            dataRow.createCell(2).setCellValue(oneRow.buyerId);
-            dataRow.createCell(3).setCellValue(oneRow.marketName);
+            dataRow.createCell(2).setCellValue(oneRow.snsUserId);
+            dataRow.createCell(3).setCellValue(oneRow.newsSourceName);
             dataRow.createCell(4).setCellValue(oneRow.attribute);
             dataRow.createCell(5).setCellValue(oneRow.value);
             ++rowIndex;
@@ -232,8 +232,8 @@ public class Reporter {
             Row dataRow = results.createRow(rowIndex);
             dataRow.createCell(0).setCellValue(oneRow.simulationId);
             dataRow.createCell(1).setCellValue(oneRow.period);
-            dataRow.createCell(2).setCellValue(oneRow.buyerId);
-            dataRow.createCell(3).setCellValue(oneRow.marketName);
+            dataRow.createCell(2).setCellValue(oneRow.snsUserId);
+            dataRow.createCell(3).setCellValue(oneRow.newsSourceName);
             dataRow.createCell(4).setCellValue(oneRow.evaluation);
             ++rowIndex;
         }
@@ -319,4 +319,3 @@ public class Reporter {
     }
 
 }
-

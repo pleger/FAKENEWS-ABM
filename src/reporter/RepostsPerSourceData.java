@@ -1,27 +1,27 @@
 package reporter;
 
-import inputManager.Markets;
+import inputManager.NewsSources;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class SalesPerMarketData {
+public class RepostsPerSourceData {
     public final int simulationId;
     public final int period;
-    public final int[] sales;
+    public final int[] reposts;
 
-    public SalesPerMarketData(int simulationId, int period, int[] sales) {
+    public RepostsPerSourceData(int simulationId, int period, int[] reposts) {
         this.simulationId = simulationId;
         this.period = period;
-        this.sales = sales.clone();
+        this.reposts = reposts.clone();
     }
 
     public static List<String> getHeader() {
         return new ArrayList<String>() {{
             add("SimulationId");
             add("Period");
-            addAll(Arrays.asList(Markets.marketNames().split(" ")));
+            addAll(Arrays.asList(NewsSources.newsSourceNames().split(" ")));
         }};
     }
 }

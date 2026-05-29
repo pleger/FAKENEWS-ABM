@@ -1,17 +1,17 @@
 package endorsement;
 
-import agent.Market;
+import agent.NewsSource;
 
 public class Endorsement {
 
     private final int period;
-    private final Market market;
+    private final NewsSource newsSource;
     private final String attributeName;
     private final double value;
 
-    public Endorsement(int period, Market market, String attributeName, double value) {
+    public Endorsement(int period, NewsSource newsSource, String attributeName, double value) {
         this.period = period;
-        this.market = market;
+        this.newsSource = newsSource;
         this.attributeName = attributeName;
         this.value = value;
     }
@@ -20,8 +20,8 @@ public class Endorsement {
         return period;
     }
 
-    public Market getMarket() {
-        return market;
+    public NewsSource getNewsSource() {
+        return newsSource;
     }
 
     public double getValue() {

@@ -2,11 +2,11 @@ package inputManager;
 
 import java.util.ArrayList;
 
-public class InnerBuyer {
+public class InnerSNSUser {
     public final ArrayList<String> attributeNames;
     public final ArrayList<Double> attributeValues;
 
-    InnerBuyer() {
+    InnerSNSUser() {
         attributeNames = new ArrayList<>();
         attributeValues = new ArrayList<>();
     }
@@ -18,7 +18,7 @@ public class InnerBuyer {
 
     @Override
     public String toString() {
-        StringBuilder text = new StringBuilder("Buyer");
+        StringBuilder text = new StringBuilder("SNSUser");
 
         for (int i = 0; i < attributeNames.size(); ++i) {
             text.append("{").append(attributeNames.get(i)).append(":").append(attributeValues.get(i)).append("}");

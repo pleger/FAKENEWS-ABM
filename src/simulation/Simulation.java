@@ -1,7 +1,7 @@
 package simulation;
 
-import agent.Buyer;
-import agent.Market;
+import agent.SNSUser;
+import agent.NewsSource;
 import gui.Chart;
 import inputManager.Configuration;
 import utils.Console;
@@ -16,65 +16,65 @@ public class Simulation implements FlyWeight, Step, ReportRegister {
     public static int ID = 0;
 
     private final int periods;
-    private final List<Buyer> buyers;
-    private final List<Market> markets;
+    private final List<SNSUser> snsUsers;
+    private final List<NewsSource> newsSources;
 
-    public Simulation(List<Buyer> buyers, List<Market> markets, int periods) {
+    public Simulation(List<SNSUser> snsUsers, List<NewsSource> newsSources, int periods) {
         this.periods = periods;
-        this.buyers = buyers;
-        this.markets = markets;
+        this.snsUsers = snsUsers;
+        this.newsSources = newsSources;
 
         reinit();
-        Console.info("Simulation: created with " + buyers.size() + " buyers and " + markets.size() + " markets");
+        Console.info("Simulation: created with " + snsUsers.size() + " snsUsers and " + newsSources.size() + " newsSources");
     }
 
     @Override
     public void reinit() {
         ++Simulation.ID;
-        buyers.iterator().forEachRemaining(Buyer::reinit);
-        buyers.iterator().forEachRemaining(buyer -> buyer.setFriends(buyers));
-        buyers.iterator().forEachRemaining(buyer -> buyer.setKnowMarkets(filterQuota(markets)));
-        buyers.iterator().forEachRemaining(Buyer::setInitialEndorsements);
+        snsUsers.iterator().forEachRemaining(SNSUser::reinit);
+        snsUsers.iterator().forEachRemaining(snsUser -> snsUser.setFriends(snsUsers));
+        snsUsers.iterator().forEachRemaining(snsUser -> snsUser.setKnowNewsSources(filterReach(newsSources)));
+        snsUsers.iterator().forEachRemaining(SNSUser::setInitialEndorsements);
 
-        markets.iterator().forEachRemaining(Market::reinit);
+        newsSources.iterator().forEachRemaining(NewsSource::reinit);
         System.gc(); //clean memory
     }
 
-    private List<Market> filterQuota(List<Market> markets) {
-        if (!Configuration.MARKET_QUOTA) {
-            return markets; //all markets
+    private List<NewsSource> filterReach(List<NewsSource> newsSources) {
+        if (!Configuration.SOURCE_REACH) {
+            return newsSources; //all newsSources
         }
 
-        List<Market> filteredMarket = new ArrayList<>();
+        List<NewsSource> filteredNewsSource = new ArrayList<>();
 
         double random;
-        for (Market mk : markets) {
+        for (NewsSource mk : newsSources) {
             random = Math.random();
-            if (random < mk.getQuota()) {
-                filteredMarket.add(mk);
+            if (random < mk.getReach()) {
+                filteredNewsSource.add(mk);
             }
         }
 
-        return filteredMarket;
+        return filteredNewsSource;
     }
 
-    private void generateSalesPerData(int period) {
-        int[] sales = new int[markets.size()];
-        int[] uniqueSales = new int[markets.size()];
+    private void generateRepostsPerData(int period) {
+        int[] reposts = new int[newsSources.size()];
+        int[] uniqueReposters = new int[newsSources.size()];
 
-        buyers.iterator().forEachRemaining(buyer -> {
-            Market selectedMarket = buyer.getLastSelectMarked(period);
+        snsUsers.iterator().forEachRemaining(snsUser -> {
+            NewsSource selectedNewsSource = snsUser.getLastSelectMarked(period);
 
-            if (selectedMarket != null) {
-                selectedMarket.addBuyers(buyer.getID());
-                sales[selectedMarket.getID()]++;
+            if (selectedNewsSource != null) {
+                selectedNewsSource.addSNSUsers(snsUser.getID());
+                reposts[selectedNewsSource.getID()]++;
             }
         });
 
-        markets.iterator().forEachRemaining(market -> uniqueSales[market.getID()] = market.getUniqueSales());
+        newsSources.iterator().forEachRemaining(newsSource -> uniqueReposters[newsSource.getID()] = newsSource.getUniqueReposters());
 
-        Reporter.addSalesByMarketData(ID, period, sales);
-        Reporter.addSalesUniqueByMarketData(ID, period, uniqueSales);
+        Reporter.addRepostsByNewsSourceData(ID, period, reposts);
+        Reporter.addRepostsUniqueByNewsSourceData(ID, period, uniqueReposters);
     }
 
     public void run() {
@@ -88,15 +88,15 @@ public class Simulation implements FlyWeight, Step, ReportRegister {
             report(period);
 
             if (Configuration.WOM) {
-                for (Buyer buyer : buyers) {
-                    buyer.receiveRecommendation(period);
+                for (SNSUser snsUser : snsUsers) {
+                    snsUser.receiveRecommendation(period);
                 }
             }
         }
 
         if (Configuration.GUI) {
-            //Chart.displaySelection(buyers, markets);
-            Chart.displaySales(markets);
+            //Chart.displaySelection(snsUsers, newsSources);
+            Chart.displayReposts(newsSources);
         }
 
         reinit();
@@ -105,13 +105,13 @@ public class Simulation implements FlyWeight, Step, ReportRegister {
 
     @Override
     public void doStep(int period) {
-        buyers.iterator().forEachRemaining(buyer -> buyer.doStep(period));
+        snsUsers.iterator().forEachRemaining(snsUser -> snsUser.doStep(period));
     }
 
     @Override
     public void report(int period) {
-       if (period > Configuration.LEARNING_PERIODS) generateSalesPerData(period);
-        buyers.iterator().forEachRemaining(buyer -> Reporter.addEndorsementData(buyer.getEndorsementData(period)));
+       if (period > Configuration.LEARNING_PERIODS) generateRepostsPerData(period);
+        snsUsers.iterator().forEachRemaining(snsUser -> Reporter.addEndorsementData(snsUser.getEndorsementData(period)));
     }
 
     @Override
@@ -119,8 +119,8 @@ public class Simulation implements FlyWeight, Step, ReportRegister {
         return "Simulation{" +
                 "ID=" + Simulation.ID +
                 ", periods=" + periods +
-                ", buyers=" + buyers.size() +
-                ", markets=" + markets.size() +
+                ", snsUsers=" + snsUsers.size() +
+                ", newsSources=" + newsSources.size() +
                 '}';
     }
 }

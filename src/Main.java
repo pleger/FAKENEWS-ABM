@@ -1,5 +1,5 @@
-import agent.BuyerFactory;
-import agent.MarketFactory;
+import agent.SNSUserFactory;
+import agent.NewsSourceFactory;
 import inputManager.Configuration;
 import inputManager.Loader;
 import utils.Console;
@@ -28,7 +28,7 @@ public class Main {
         options.applyOverrides();
 
         Console.info("MAIN: Configuration loaded -> {" + Configuration.toStringConfiguration() + " }");
-        Simulation s = new Simulation(BuyerFactory.createFromInput(), MarketFactory.createFromInput(),
+        Simulation s = new Simulation(SNSUserFactory.createFromInput(), NewsSourceFactory.createFromInput(),
                 Configuration.PERIODS);
 
         Instant start = Instant.now();

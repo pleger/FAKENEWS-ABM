@@ -1,7 +1,7 @@
 package gui;
 
-import agent.Buyer;
-import agent.Market;
+import agent.SNSUser;
+import agent.NewsSource;
 import inputManager.Configuration;
 import utils.Console;
 import utils.Error;
@@ -23,46 +23,46 @@ import java.util.Map;
 public class Chart {
     private static XYChart chart;
 
-    public static void displaySales(List<Market> markets) {
-        Console.info("Chart: Displaying Sales");
-        createXChartDriverSales();
+    public static void displayReposts(List<NewsSource> newsSources) {
+        Console.info("Chart: Displaying Reposts");
+        createXChartDriverReposts();
 
-        DataSaleChart[] sales = DataSaleChart.createDataSaleChart(markets);
-        for (DataSaleChart sale : sales) {
-            registerSeries2(sale);
+        DataRepostChart[] reposts = DataRepostChart.createDataRepostChart(newsSources);
+        for (DataRepostChart repost : reposts) {
+            registerSeries2(repost);
         }
 
         if (Configuration.REPETITIONS == 0) drawChart();
         saveChart();
     }
 
-    public static void displaySelection(List<Buyer> buyers, List<Market> markets) {
+    public static void displaySelection(List<SNSUser> snsUsers, List<NewsSource> newsSources) {
         Console.info("Chart: Displaying Selection");
-        createXChartDriverSelection(markets);
-        buyers.iterator().forEachRemaining(buyer -> registerSeries(buyer.getDataSeries()));
+        createXChartDriverSelection(newsSources);
+        snsUsers.iterator().forEachRemaining(snsUser -> registerSeries(snsUser.getDataSeries()));
         if (Configuration.REPETITIONS == 0) drawChart();
         saveChart();
     }
 
-    private static void createXChartDriverSales() {
+    private static void createXChartDriverReposts() {
         chart = new XYChartBuilder().width(800).height(600).title("simulation")
-                .xAxisTitle("Period").yAxisTitle("Sales").build();
+                .xAxisTitle("Period").yAxisTitle("Reposts").build();
         chart.getStyler().setYAxisDecimalPattern("#0").setXAxisDecimalPattern("#0").setLegendPosition(Styler.LegendPosition.InsideNE);
     }
 
-    private static void createXChartDriverSelection(List<Market> markets) {
+    private static void createXChartDriverSelection(List<NewsSource> newsSources) {
         chart = new XYChartBuilder().width(800).height(600).title("simulation")
-                .xAxisTitle("Period").yAxisTitle("Market").build();
+                .xAxisTitle("Period").yAxisTitle("NewsSource").build();
 
-        chart.getStyler().setYAxisDecimalPattern("#0").setXAxisDecimalPattern("#0").setYAxisMax(markets.size() * 1.0).setLegendPosition(Styler.LegendPosition.InsideNE);
+        chart.getStyler().setYAxisDecimalPattern("#0").setXAxisDecimalPattern("#0").setYAxisMax(newsSources.size() * 1.0).setLegendPosition(Styler.LegendPosition.InsideNE);
         Map<Double, Object> customYAxisTickLabelsMap = new HashMap<>();
-        for (Market market : markets) {
-            customYAxisTickLabelsMap.put(market.getID() * 1.0, market.getName());
+        for (NewsSource newsSource : newsSources) {
+            customYAxisTickLabelsMap.put(newsSource.getID() * 1.0, newsSource.getName());
         }
         chart.setYAxisLabelOverrideMap(customYAxisTickLabelsMap);
     }
 
-    private static void registerSeries2(DataSaleChart dataChart) {
+    private static void registerSeries2(DataRepostChart dataChart) {
         chart.addSeries(dataChart.getName(), dataChart.getXData(), dataChart.getYData());
     }
 

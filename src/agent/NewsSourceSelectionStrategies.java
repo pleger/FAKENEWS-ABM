@@ -4,7 +4,7 @@ import utils.Error;
 
 import java.util.Map;
 
-public class MarketSelectionStrategies {
+public class NewsSourceSelectionStrategies {
 
     public static int BY_MAX(Map<Integer, Double> evaluations) {
         int selected = -1;
@@ -17,7 +17,7 @@ public class MarketSelectionStrategies {
             }
         }
 
-        Error.setAssert(selected != -1, "MarketSelectionStrategies.BY_MAX: no market selected info{size:" + evaluations.size() + ",max:" + max + "}");
+        Error.setAssert(selected != -1, "NewsSourceSelectionStrategies.BY_MAX: no newsSource selected info{size:" + evaluations.size() + ",max:" + max + "}");
         return selected;
     }
 
@@ -40,7 +40,7 @@ public class MarketSelectionStrategies {
             }
         }
 
-        Error.setAssert(selected != -1, "MarketSelectionStrategies.BY_PROBABILITY: no market selected, info{size:" + evaluations.size() + ",acc:" + acc + ",random:" + random + "}");
+        Error.setAssert(selected != -1, "NewsSourceSelectionStrategies.BY_PROBABILITY: no newsSource selected, info{size:" + evaluations.size() + ",acc:" + acc + ",random:" + random + "}");
         return selected;
     }
 }

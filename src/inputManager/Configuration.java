@@ -26,7 +26,7 @@ public class Configuration {
     private final static double D_BASE = 1.2;
     private final static int D_MEMORY = -1;    //-1 infinite
     private final static int D_LEARNING_PERIODS = 100;
-    private final static boolean D_MARKET_QUOTA = false;
+    private final static boolean D_SOURCE_REACH = false;
     private final static boolean D_WOM = false;
     private final static int D_SCENARIO = -1;
 
@@ -34,14 +34,14 @@ public class Configuration {
     private final static boolean D_SAVED_ENDORSEMENTS = false;
     private final static boolean D_SAVED_AGENT_DECISIONS = false;
     private final static boolean D_SAVED_DETAILED_AGENT_DECISIONS = false;
-    private final static boolean D_SAVED_SALES_PER_MARKET = false;
+    private final static boolean D_SAVED_REPOSTS_PER_SOURCE = false;
 
     public static String FILE_NAME;
     public static String OUTPUT_DIRECTORY;
 
-    public static int MARKETS;
-    public static int ATTRIBUTES_M;
-    public static int ATTRIBUTES_B;
+    public static int NEWS_SOURCES;
+    public static int ATTRIBUTES_SOURCE;
+    public static int ATTRIBUTES_USER;
 
     public static int PERIODS = D_PERIODS;
     public static int AGENTS = D_AGENTS;
@@ -52,14 +52,14 @@ public class Configuration {
     public static boolean GUI = D_GUI;
     public static double BASE = D_BASE;
     public static int MEMORY = D_MEMORY;
-    public static boolean MARKET_QUOTA = D_MARKET_QUOTA;
+    public static boolean SOURCE_REACH = D_SOURCE_REACH;
     public static boolean WOM = D_WOM;
     public static int SCENARIO = D_SCENARIO;
     public static int LEARNING_PERIODS = D_LEARNING_PERIODS;
 
     //debug to save information
     public static boolean COMPRESSED_RESULTS = D_COMPRESSED_RESULTS;
-    public static boolean SAVED_SALES_PER_MARKET = D_SAVED_SALES_PER_MARKET;
+    public static boolean SAVED_REPOSTS_PER_SOURCE = D_SAVED_REPOSTS_PER_SOURCE;
     public static boolean SAVED_DETAILED_AGENT_DECISIONS = D_SAVED_DETAILED_AGENT_DECISIONS;
     public static boolean SAVED_AGENT_DECISIONS = D_SAVED_AGENT_DECISIONS;
     public static boolean SAVED_ENDORSEMENTS = D_SAVED_ENDORSEMENTS;
@@ -76,7 +76,7 @@ public class Configuration {
         GUI = conf.get("GUI") != null ? conf.get("GUI") == 1 : D_GUI;
         BASE = conf.get("BASE") != null ? conf.get("BASE") : D_BASE;
         MEMORY = conf.get("MEMORY") != null ? conf.get("MEMORY").intValue() : D_MEMORY;
-        MARKET_QUOTA = conf.get("MARKET_QUOTA") != null ? conf.get("MARKET_QUOTA") == 1 : D_MARKET_QUOTA;
+        SOURCE_REACH = conf.get("SOURCE_REACH") != null ? conf.get("SOURCE_REACH") == 1 : D_SOURCE_REACH;
         WOM = conf.get("WOM") != null ? conf.get("WOM") == 1 : D_WOM;
         SCENARIO = conf.get("SCENARIO") != null ? conf.get("SCENARIO").intValue() : D_SCENARIO;
         LEARNING_PERIODS = conf.get("LEARNING_PERIODS") != null ? conf.get("LEARNING_PERIODS").intValue() : D_LEARNING_PERIODS;
@@ -85,7 +85,7 @@ public class Configuration {
         SAVED_ENDORSEMENTS = conf.get("SAVED_ENDORSEMENTS") != null ? conf.get("SAVED_ENDORSEMENTS") == 1 : D_SAVED_ENDORSEMENTS;
         SAVED_AGENT_DECISIONS = conf.get("SAVED_AGENT_DECISIONS") != null ? conf.get("SAVED_AGENT_DECISIONS") == 1 : D_SAVED_AGENT_DECISIONS;
         SAVED_DETAILED_AGENT_DECISIONS = conf.get("SAVED_DETAILED_AGENT_DECISIONS") != null ? conf.get("SAVED_DETAILED_AGENT_DECISIONS") == 1 : D_SAVED_DETAILED_AGENT_DECISIONS;
-        SAVED_SALES_PER_MARKET = conf.get("SAVED_SALES_PER_MARKET") != null ? conf.get("SAVED_SALES_PER_MARKET") == 1 : D_SAVED_SALES_PER_MARKET;
+        SAVED_REPOSTS_PER_SOURCE = conf.get("SAVED_REPOSTS_PER_SOURCE") != null ? conf.get("SAVED_REPOSTS_PER_SOURCE") == 1 : D_SAVED_REPOSTS_PER_SOURCE;
     }
 
     private static void creatingOutputFolder(String output) {
@@ -123,13 +123,13 @@ public class Configuration {
         }
     }
 
-    public static void setAttributes(int markets, int buyers) {
-        set("ATTRIBUTES_M", markets);
-        set("ATTRIBUTES_B", buyers);
+    public static void setAttributes(int newsSources, int snsUsers) {
+        set("ATTRIBUTES_SOURCE", newsSources);
+        set("ATTRIBUTES_USER", snsUsers);
     }
 
-    public static void setMarkets(int markets) {
-        set("MARKETS", markets);
+    public static void setNewsSources(int newsSources) {
+        set("NEWS_SOURCES", newsSources);
     }
 
     private static void set(String name, double value) {
@@ -146,14 +146,14 @@ public class Configuration {
             case "FRIENDS":
                 FRIENDS = value;
                 break;
-            case "ATTRIBUTES_M":
-                ATTRIBUTES_M = (int) value;
+            case "ATTRIBUTES_SOURCE":
+                ATTRIBUTES_SOURCE = (int) value;
                 break;
-            case "ATTRIBUTES_B":
-                ATTRIBUTES_B = (int) value;
+            case "ATTRIBUTES_USER":
+                ATTRIBUTES_USER = (int) value;
                 break;
-            case "MARKETS":
-                MARKETS = (int) value;
+            case "NEWS_SOURCES":
+                NEWS_SOURCES = (int) value;
                 break;
             case "REPETITIONS":
                 REPETITIONS = (int) value;
@@ -170,8 +170,8 @@ public class Configuration {
             case "MEMORY":
                 MEMORY = (int) value;
                 break;
-            case "MARKET_QUOTA":
-                MARKET_QUOTA = value == 1;
+            case "SOURCE_REACH":
+                SOURCE_REACH = value == 1;
                 break;
             case "WOM":
                 WOM = value == 1;
@@ -194,8 +194,8 @@ public class Configuration {
             case "SAVED_AGENT_DECISIONS":
                 SAVED_AGENT_DECISIONS = value == 1;
                 break;
-            case "SAVED_SALES_PER_MARKET":
-                SAVED_SALES_PER_MARKET = value == 1;
+            case "SAVED_REPOSTS_PER_SOURCE":
+                SAVED_REPOSTS_PER_SOURCE = value == 1;
                 break;
             default:
                 Console.error("CONFIGURATOR.SET: Wrong Parameter: " + name.toUpperCase());
@@ -206,8 +206,8 @@ public class Configuration {
         //find a way to test parameters without using a string
 
         String[] parameters = new String[]{"PERIODS", "AGENTS", "CONTACTS", "FRIENDS", "LEVELS", "REPETITIONS", "GUI",
-                "BASE", "MEMORY", "MARKET_QUOTA", "WOM", "SCENARIO", "LEARNING_PERIODS",
-                "SAVED_ENDORSEMENTS", "SAVED_SALES_PER_MARKET", "SAVED_DETAILED_AGENT_DECISIONS",
+                "BASE", "MEMORY", "SOURCE_REACH", "WOM", "SCENARIO", "LEARNING_PERIODS",
+                "SAVED_ENDORSEMENTS", "SAVED_REPOSTS_PER_SOURCE", "SAVED_DETAILED_AGENT_DECISIONS",
                 "SAVED_AGENT_DECISIONS", "COMPRESSED_RESULTS"};
 
         for (String param : parameters) {
@@ -228,7 +228,7 @@ public class Configuration {
         conf.put("GUI", GUI ? 1.0 : 0.0);
         conf.put("BASE", BASE);
         conf.put("MEMORY", (double) MEMORY);
-        conf.put("MARKET_QUOTA", MARKET_QUOTA ? 1.0 : 0.0);
+        conf.put("SOURCE_REACH", SOURCE_REACH ? 1.0 : 0.0);
         conf.put("WOM", WOM ? 1.0 : 0.0);
         conf.put("SCENARIO", (double) SCENARIO);
         conf.put("LEARNING_PERIODS", (double) LEARNING_PERIODS);
@@ -237,7 +237,7 @@ public class Configuration {
         conf.put("SAVED_ENDORSEMENTS", SAVED_ENDORSEMENTS ? 1.0 : 0.0);
         conf.put("SAVED_DETAILED_AGENT_DECISIONS", SAVED_DETAILED_AGENT_DECISIONS ? 1.0 : 0.0);
         conf.put("SAVED_AGENT_DECISIONS", SAVED_AGENT_DECISIONS ? 1.0 : 0.0);
-        conf.put("SAVED_SALES_PER_MARKET", SAVED_SALES_PER_MARKET ? 1.0 : 0.0);
+        conf.put("SAVED_REPOSTS_PER_SOURCE", SAVED_REPOSTS_PER_SOURCE ? 1.0 : 0.0);
 
         return conf;
     }

@@ -1,12 +1,12 @@
 package agent;
 
-import endorsement.AttributesBuyer;
+import endorsement.AttributesSNSUser;
 import endorsement.Endorsement;
 import endorsement.EndorsementFactory;
 import endorsement.Endorsements;
 import gui.DataChart;
 import inputManager.Configuration;
-import inputManager.InnerBuyer;
+import inputManager.InnerSNSUser;
 import utils.Console;
 import reporter.ReportRegister;
 import reporter.Reporter;
@@ -20,22 +20,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Buyer implements Step, FlyWeight, ReportRegister {
+public class SNSUser implements Step, FlyWeight, ReportRegister {
     private static int counter = 0;
 
     private final int ID;
-    private final AttributesBuyer attribute;
-    private final List<Buyer> friends;
+    private final AttributesSNSUser attribute;
+    private final List<SNSUser> friends;
     private final Endorsements endors;
-    private List<Market> knownMarkets;
+    private List<NewsSource> knownNewsSources;
 
     private final DataChart data;
-    private double currentMarketEvaluation;
+    private double currentNewsSourceEvaluation;
 
-    Buyer(InnerBuyer ib) {
+    SNSUser(InnerSNSUser ib) {
         this.ID = counter++;
         this.friends = new ArrayList<>();
-        this.knownMarkets = new ArrayList<>();
+        this.knownNewsSources = new ArrayList<>();
         this.endors = new Endorsements();
 
         ArrayList<Double[]> values = new ArrayList<>();
@@ -43,25 +43,25 @@ public class Buyer implements Step, FlyWeight, ReportRegister {
             values.add(new Double[]{value});
         }
 
-        attribute = new AttributesBuyer(ib.attributeNames, values);
+        attribute = new AttributesSNSUser(ib.attributeNames, values);
         data = new DataChart(Integer.toString(ID));
 
-        Console.info("Buyer: " + this);
+        Console.info("SNSUser: " + this);
     }
 
-    public void setFriends(List<Buyer> buyers) {
+    public void setFriends(List<SNSUser> snsUsers) {
         int friendCounter = 0;
-        int friendSize = Math.min((int) (Configuration.CONTACTS * Configuration.FRIENDS), Math.max(0, buyers.size() - 1));
+        int friendSize = Math.min((int) (Configuration.CONTACTS * Configuration.FRIENDS), Math.max(0, snsUsers.size() - 1));
 
         while (friendCounter < friendSize) {
-            Buyer potentialContact = buyers.get((int) (Math.random() * buyers.size()));
+            SNSUser potentialContact = snsUsers.get((int) (Math.random() * snsUsers.size()));
             if (addFriend(potentialContact)) {
                 ++friendCounter;
             }
         }
     }
 
-    private boolean addFriend(Buyer potentialContact) {
+    private boolean addFriend(SNSUser potentialContact) {
         if (potentialContact != this && !friends.contains(potentialContact)) {
             friends.add(potentialContact);
             return true;
@@ -73,7 +73,7 @@ public class Buyer implements Step, FlyWeight, ReportRegister {
         return endors;
     }
 
-    public AttributesBuyer getAttribute() {
+    public AttributesSNSUser getAttribute() {
         return attribute;
     }
 
@@ -89,61 +89,61 @@ public class Buyer implements Step, FlyWeight, ReportRegister {
         return data;
     }
 
-    public double getCurrentMarketEvaluation() {
-        return currentMarketEvaluation;
+    public double getCurrentNewsSourceEvaluation() {
+        return currentNewsSourceEvaluation;
     }
 
     public void setInitialEndorsements() {
-        knownMarkets.iterator().forEachRemaining(market -> endors.addAll(EndorsementFactory.createInitial(-1, this, market)));
+        knownNewsSources.iterator().forEachRemaining(newsSource -> endors.addAll(EndorsementFactory.createInitial(-1, this, newsSource)));
     }
 
-    public void setKnowMarkets(List<Market> markets) {
-        this.knownMarkets = new ArrayList<>(markets);
+    public void setKnowNewsSources(List<NewsSource> newsSources) {
+        this.knownNewsSources = new ArrayList<>(newsSources);
     }
 
     @Override
     public void doStep(int period) {
-        if (knownMarkets.size() > 0) { //buyer could not ignore all markets
-            endors.addAll(Interaction.interact(period, this, knownMarkets));
+        if (knownNewsSources.size() > 0) { //snsUser could not ignore all newsSources
+            endors.addAll(Interaction.interact(period, this, knownNewsSources));
             report(period);
 
             //adding data to draw (should be removed later)
-            data.addData(period, endors.getSelectedMarket(period).getID());
+            data.addData(period, endors.getSelectedNewsSource(period).getID());
         }
     }
 
     public void setCurrentEvaluation(double evaluation) {
-        this.currentMarketEvaluation = evaluation;
+        this.currentNewsSourceEvaluation = evaluation;
     }
 
     public ArrayList<EndorsementData> getEndorsementData(int period) {
         Endorsements currentEndors = endors.filterByPeriod(period);
         ArrayList<EndorsementData> endorsData = new ArrayList<>();
-        currentEndors.forEach(endor -> endorsData.add(new EndorsementData(Simulation.ID, endor.getPeriod(), ID, endor.getMarket().getName(),
+        currentEndors.forEach(endor -> endorsData.add(new EndorsementData(Simulation.ID, endor.getPeriod(), ID, endor.getNewsSource().getName(),
                 endor.getAttributeName(), endor.getValue())));
 
         return endorsData;
     }
 
     public void receiveRecommendation(int period) {
-        //System.out.println("---->RECEIVED RECOMMENDATION buyer:" + getID() + " known markets:" + knownMarkets.size() + " period:" + period);
+        //System.out.println("---->RECEIVED RECOMMENDATION snsUser:" + getID() + " known newsSources:" + knownNewsSources.size() + " period:" + period);
 
         Map<Integer, Double> currentEvaluations = new HashMap<>();
-        Market recommendedMk;
+        NewsSource recommendedMk;
 
         friends.iterator().forEachRemaining(friend -> {
-            Market market = friend.getLastSelectMarked(period);
-            if (market != null) {
-                currentEvaluations.put(market.getID(), friend.getCurrentMarketEvaluation());
+            NewsSource newsSource = friend.getLastSelectMarked(period);
+            if (newsSource != null) {
+                currentEvaluations.put(newsSource.getID(), friend.getCurrentNewsSourceEvaluation());
             }
         });
 
-        int selectedId = MarketSelectionStrategies.BY_MAX(currentEvaluations);
-        recommendedMk = MarketFactory.getMarket(knownMarkets, selectedId);
+        int selectedId = NewsSourceSelectionStrategies.BY_MAX(currentEvaluations);
+        recommendedMk = NewsSourceFactory.getNewsSource(knownNewsSources, selectedId);
         if (recommendedMk == null) {
-            //System.out.println("ADDING NOTHING:" + MarketFactory.getMarket(selectedId).getName()+ " c_eval:"+currentEvaluations.size() + " getID:"+ID+ " period:"+period);
-            recommendedMk = MarketFactory.getMarket(selectedId);
-            knownMarkets.add(recommendedMk);
+            //System.out.println("ADDING NOTHING:" + NewsSourceFactory.getNewsSource(selectedId).getName()+ " c_eval:"+currentEvaluations.size() + " getID:"+ID+ " period:"+period);
+            recommendedMk = NewsSourceFactory.getNewsSource(selectedId);
+            knownNewsSources.add(recommendedMk);
         }
 
         String attName = "WORD OF MOUTH";
@@ -151,21 +151,21 @@ public class Buyer implements Step, FlyWeight, ReportRegister {
         endors.add(new Endorsement(period + 1, recommendedMk, attName, mean));
     }
 
-    public Market getLastSelectMarked(int period) {
-        return endors.getSelectedMarket(period);
+    public NewsSource getLastSelectMarked(int period) {
+        return endors.getSelectedNewsSource(period);
     }
 
     @Override
     public void reinit() {
-        currentMarketEvaluation = Double.MAX_VALUE * -1;
+        currentNewsSourceEvaluation = Double.MAX_VALUE * -1;
         endors.clear();
         friends.clear();
-        knownMarkets.clear();
+        knownNewsSources.clear();
     }
 
     @Override
     public void report(int period) {
-        Reporter.addAgentDecisionData(Simulation.ID, period, getID(), getLastSelectMarked(period).getName(), this.currentMarketEvaluation);
+        Reporter.addAgentDecisionData(Simulation.ID, period, getID(), getLastSelectMarked(period).getName(), this.currentNewsSourceEvaluation);
     }
 
     @Override
@@ -177,15 +177,15 @@ public class Buyer implements Step, FlyWeight, ReportRegister {
             attributeValue.append(attribute.getName(i)).append("[").append(attribute.getValue(i)).append("], ");
         }
 
-        for (Market knownMarket : knownMarkets) {
-            knowMks.append(knownMarket.getName()).append(",");
+        for (NewsSource knownNewsSource : knownNewsSources) {
+            knowMks.append(knownNewsSource.getName()).append(",");
         }
 
-        return "Buyer{" +
+        return "SNSUser{" +
                 "ID=" + ID +
                 ", attribute=" + attributeValue +
-                ", knownMarkets={" + knowMks + "}" +
-                ", currentEvaluation={" + currentMarketEvaluation + "}" +
+                ", knownNewsSources={" + knowMks + "}" +
+                ", currentEvaluation={" + currentNewsSourceEvaluation + "}" +
                 '}';
     }
 }

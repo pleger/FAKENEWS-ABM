@@ -1,6 +1,6 @@
 package endorsement;
 
-import agent.Market;
+import agent.NewsSource;
 import inputManager.Configuration;
 
 import java.util.ArrayList;
@@ -48,8 +48,8 @@ public class Endorsements {
         return filter(endor -> endor.getPeriod() == period);
     }
 
-    public Endorsements filterByMarket(Market market) {
-        return filter(endor -> endor.getMarket().getName().equals(market.getName()));
+    public Endorsements filterByNewsSource(NewsSource newsSource) {
+        return filter(endor -> endor.getNewsSource().getName().equals(newsSource.getName()));
     }
 
     public Endorsements removeByAttribute (String attName)  {
@@ -65,11 +65,11 @@ public class Endorsements {
         return values;
     }
 
-    public Market getSelectedMarket(int period){
+    public NewsSource getSelectedNewsSource(int period){
         List<Endorsement> periodTransaction = filterByPeriod(period).removeByAttribute("WORD OF MOUTH").endors;
-        //System.out.println("getSelectedMarket:"+periodTransaction.get(0).getMarket().getName());
+        //System.out.println("getSelectedNewsSource:"+periodTransaction.get(0).getNewsSource().getName());
 
-        return periodTransaction.size() > 0? periodTransaction.get(0).getMarket(): null;
+        return periodTransaction.size() > 0? periodTransaction.get(0).getNewsSource(): null;
     }
 
     public int size() {

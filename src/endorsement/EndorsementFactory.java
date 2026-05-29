@@ -1,29 +1,29 @@
 package endorsement;
 
-import agent.Buyer;
-import agent.Market;
+import agent.SNSUser;
+import agent.NewsSource;
 
 import java.util.function.BiFunction;
 
 public class EndorsementFactory {
 
-    public static Endorsements createInitial(int period, Buyer buyer, Market market) {
-        return create(period,buyer,market, EndorsementEvalStrategies::BY_MAX);
+    public static Endorsements createInitial(int period, SNSUser snsUser, NewsSource newsSource) {
+        return create(period,snsUser,newsSource, EndorsementEvalStrategies::BY_MAX);
     }
-    public static Endorsements createByStep(int period, Buyer buyer, Market market) {
-        return create(period,buyer,market, EndorsementEvalStrategies::BY_PROBABILITY);
+    public static Endorsements createByStep(int period, SNSUser snsUser, NewsSource newsSource) {
+        return create(period,snsUser,newsSource, EndorsementEvalStrategies::BY_PROBABILITY);
     }
 
-    private static Endorsements create(int period, Buyer buyer, Market market, BiFunction<Double[], Double, Double> strategy) {
+    private static Endorsements create(int period, SNSUser snsUser, NewsSource newsSource, BiFunction<Double[], Double, Double> strategy) {
         Endorsements endors = new Endorsements();
 
-        AttributesMarket aMarket = market.getAttributes();
-        AttributesBuyer aBuyer = buyer.getAttribute();
+        AttributesNewsSource aNewsSource = newsSource.getAttributes();
+        AttributesSNSUser aSNSUser = snsUser.getAttribute();
 
-        double[] results = EndorsementEvalStrategies.evaluate(aMarket, aBuyer, strategy);
+        double[] results = EndorsementEvalStrategies.evaluate(aNewsSource, aSNSUser, strategy);
 
         for (int i = 0; i < results.length; ++i) {
-            endors.add(new Endorsement(period, market, aMarket.getName(i), results[i]));
+            endors.add(new Endorsement(period, newsSource, aNewsSource.getName(i), results[i]));
         }
 
         return endors;

@@ -4,17 +4,17 @@ import inputManager.Configuration;
 
 import java.util.ArrayList;
 
-public class AttributesMarket extends Attributes {
+public class AttributesNewsSource extends Attributes {
 
-    public AttributesMarket(ArrayList<String> names, ArrayList<Double[]> values) {
+    public AttributesNewsSource(ArrayList<String> names, ArrayList<Double[]> values) {
         super(names, values);
     }
 
-    public AttributesMarket copy() {
-        return new AttributesMarket(new ArrayList<>(this.names), new ArrayList<>(this.values));
+    public AttributesNewsSource copy() {
+        return new AttributesNewsSource(new ArrayList<>(this.names), new ArrayList<>(this.values));
     }
 
-    public AttributesMarket replace(String name, Double[] newValues) {
+    public AttributesNewsSource replace(String name, Double[] newValues) {
         ArrayList<String> resultNames = new ArrayList<>();
         ArrayList<Double[]> resultValues = new ArrayList<>();
 
@@ -27,18 +27,18 @@ public class AttributesMarket extends Attributes {
             }
         });
 
-        return new AttributesMarket(resultNames, resultValues);
+        return new AttributesNewsSource(resultNames, resultValues);
     }
 
-    public AttributesMarket replaceAll(String[] names, Double[][] newValues) {
-        AttributesMarket result = copy();
+    public AttributesNewsSource replaceAll(String[] names, Double[][] newValues) {
+        AttributesNewsSource result = copy();
         for (int i = 0; i < names.length; ++i) {
             result = result.replace(names[i], newValues[i]);
         }
         return result;
     }
 
-    public AttributesMarket replaceAll(String[] names, AttributesMarket attm) {
+    public AttributesNewsSource replaceAll(String[] names, AttributesNewsSource attm) {
         Double[][] values = new Double[names.length][Configuration.LEVELS];
 
         for (int i = 0; i < names.length; ++i) {
