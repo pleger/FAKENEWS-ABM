@@ -1,8 +1,8 @@
 # FAKENEWS-ABM
 
-FAKENEWS-ABM is a fork of `pragmaticslaboratory/SBABM` adapted from a product-purchase ABM to the dissemination of fake news on Social Network Sites (SNSs) such as X or Instagram.
+FAKENEWS-ABM is an agent-based model for simulating the dissemination of fake news on Social Network Sites (SNSs) such as X or Instagram.
 
-The fork keeps the agent-based simulation core and Endorsement theory, but changes the domain model:
+The model uses Endorsement theory to represent how SNS users evaluate news sources and decide whether to repost news:
 
 - `SNSUser` agents represent SNS users;
 - `NewsSource` objects represent source types, such as traditional media, unknown online media, fake-news sources, and mixed sources;
@@ -11,7 +11,7 @@ The fork keeps the agent-based simulation core and Endorsement theory, but chang
 - word of mouth becomes contact-based social sharing;
 - endorsement attributes come from `datos para simulacion.xlsx`.
 
-The fork is designed for the PLURALISMO project line on evaluating strategies to disseminate fake news using artificial intelligence. In that context, the ABM provides a computational laboratory for comparing how source credibility, content framing, source reach, user contacts, and scenario interventions affect fake-news diffusion.
+FAKENEWS-ABM is designed for the PLURALISMO project line on evaluating strategies to disseminate fake news using artificial intelligence. In that context, the ABM provides a computational laboratory for comparing how source credibility, content framing, source reach, user contacts, and scenario interventions affect fake-news diffusion.
 
 ## Model
 
@@ -28,7 +28,7 @@ The source attributes are two-level probability distributions (`Bajo`, `Alto`) f
 - credibility of the source;
 - audiovisual content, hashtags, and links.
 
-User attributes are the corresponding mean weights on a 1-7 scale. The optional `WORD OF MOUTH` weight controls how strongly users incorporate recommendations from contacts. The inherited endorsement formula supports negative weights too, which can be useful when an experiment should model aversion to a high level of an attribute, such as sensationalism.
+User attributes are the corresponding mean weights on a 1-7 scale. The optional `WORD OF MOUTH` weight controls how strongly users incorporate recommendations from contacts. The endorsement formula supports negative weights too, which can be useful when an experiment should model aversion to a high level of an attribute, such as sensationalism.
 
 ## Inputs
 
@@ -97,7 +97,7 @@ The test suite currently checks:
 
 ## Outputs
 
-Each run writes a timestamped folder under `output/`. The output workbook includes the original configuration and input sheets, plus:
+Each run writes a timestamped folder under `output/`. The output workbook includes the configuration and input sheets, plus:
 
 - `RepostsPerSource`;
 - `UniqueRepostersPerSource`;
@@ -110,4 +110,4 @@ The source code now uses PLURALISMO/SNS vocabulary for the main domain types: `S
 
 ## License
 
-MIT, inherited from SBABM.
+MIT.
