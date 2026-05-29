@@ -17,7 +17,7 @@ FAKENEWS-ABM is designed for the PLURALISMO project line on evaluating strategie
 
 Each simulation has a population of SNS users. At every period, each user evaluates the sources they know through accumulated endorsement values. A selected source represents the source whose news the user reposts in that period.
 
-The source attributes are two-level probability distributions (`Bajo`, `Alto`) for variables such as:
+The source attributes are two-level probability distributions (`Low`, `High`) for variables such as:
 
 - positive and negative evoked emotions;
 - simple language;
