@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+set -eu
+
+APP_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+exec java -cp "$APP_DIR/FAKENEWS-ABM.jar:$APP_DIR/lib/*" Main "$@"

@@ -1,12 +1,28 @@
 JAVAC ?= javac
 JAVA ?= java
+JAR ?= jar
+VERSION ?= 0.1.0
+APP_NAME := FAKENEWS-ABM
 CLASSPATH := build/classes:lib/*
+DIST_DIR := dist/$(APP_NAME)-$(VERSION)
+DIST_ZIP := dist/$(APP_NAME)-$(VERSION).zip
 
-.PHONY: build test run clean
+.PHONY: build test jar dist run clean
 
 build:
 	mkdir -p build/classes
 	$(JAVAC) -cp "lib/*" -d build/classes $$(find src -name "*.java")
+
+jar: build
+	mkdir -p build/package
+	$(JAR) cfe build/package/$(APP_NAME).jar Main -C build/classes .
+
+dist: jar
+	rm -rf "$(DIST_DIR)" "$(DIST_ZIP)"
+	mkdir -p "$(DIST_DIR)"
+	cp -R build/package/$(APP_NAME).jar lib input bin README.md LICENSE "$(DIST_DIR)/"
+	cd dist && zip -qr "$(APP_NAME)-$(VERSION).zip" "$(APP_NAME)-$(VERSION)"
+	@echo "$(DIST_ZIP)"
 
 test: build
 	$(JAVAC) -cp "$(CLASSPATH)" -d build/classes $$(find tests -name "*.java")
@@ -16,4 +32,4 @@ run: build
 	$(JAVA) -cp "$(CLASSPATH)" Main --input FAKENEWS_BASELINE --no-gui
 
 clean:
-	rm -rf build output
+	rm -rf build dist output

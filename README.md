@@ -69,6 +69,18 @@ Run a scenario:
 java -cp "build/classes:lib/*" Main --input FAKENEWS_BASELINE --no-gui
 ```
 
+Build a distributable package:
+
+```sh
+make dist
+```
+
+The package is written to `dist/FAKENEWS-ABM-0.1.0.zip`. After unzipping it, run:
+
+```sh
+bin/fakenews-abm --input FAKENEWS_BASELINE --no-gui
+```
+
 Useful overrides:
 
 ```sh
