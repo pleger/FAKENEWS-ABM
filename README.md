@@ -115,6 +115,24 @@ The `Coordinated Push` panel activates the intervention configured in `FAKENEWS_
 
 The `Media Literacy` panel represents a countermeasure-style population: users give more weight to information quality and less weight to sensationalism and negative emotion. In this run, reposts concentrate more strongly around traditional media and reduce the relative presence of mixed and fake-news sources.
 
+## Browser TypeScript App
+
+The repository also includes a backend-free TypeScript implementation with a web UI. It runs the ABM directly in the browser, reads Excel workbooks, validates the same configuration fields used by `Configuration.java`, displays simulation progress and logs, renders generated chart images, and produces downloadable workbook/ZIP artifacts.
+
+Install and run:
+
+```sh
+npm install
+npm run dev
+```
+
+Then open the local URL printed by Vite. The app includes two bundled examples:
+
+- `FAKENEWS_BASELINE.xlsx`
+- `FAKENEWS_COORDINATED_PUSH.xlsx`
+
+You can also load any compatible `.xlsx` workbook through the file picker.
+
 ## Tests
 
 Run:
