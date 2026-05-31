@@ -99,6 +99,35 @@ type SimulationOutput = {
 };
 
 type LogLevel = "INFO" | "WARN" | "ERROR" | "DEBUG";
+type ConfigEditableKey =
+  | "periods"
+  | "agents"
+  | "contacts"
+  | "friends"
+  | "levels"
+  | "repetitions"
+  | "gui"
+  | "base"
+  | "memory"
+  | "sourceReach"
+  | "wom"
+  | "scenario"
+  | "learningPeriods"
+  | "savedEndorsements"
+  | "savedRepostsPerSource"
+  | "savedDetailedAgentDecisions"
+  | "savedAgentDecisions"
+  | "compressedResults";
+
+type ConfigField = {
+  label: string;
+  key: ConfigEditableKey;
+  min?: number;
+  max?: number;
+  step?: number;
+  integer?: boolean;
+  boolean?: boolean;
+};
 
 const EXAMPLES = [
   {
@@ -136,6 +165,27 @@ const REQUIRED_CONFIG = [
   "COMPRESSED_RESULTS"
 ];
 
+const CONFIG_FIELDS: ConfigField[] = [
+  { label: "PERIODS", key: "periods", min: 1, step: 1, integer: true },
+  { label: "AGENTS", key: "agents", min: 1, step: 1, integer: true },
+  { label: "CONTACTS", key: "contacts", min: 0, step: 1, integer: true },
+  { label: "FRIENDS", key: "friends", min: 0, max: 1, step: 0.01 },
+  { label: "LEVELS", key: "levels", min: 2, step: 1, integer: true },
+  { label: "REPETITIONS", key: "repetitions", min: 0, step: 1, integer: true },
+  { label: "GUI", key: "gui", min: 0, max: 1, step: 1, integer: true, boolean: true },
+  { label: "BASE", key: "base", min: 0, step: 0.01 },
+  { label: "MEMORY", key: "memory", step: 1, integer: true },
+  { label: "SOURCE_REACH", key: "sourceReach", min: 0, max: 1, step: 1, integer: true, boolean: true },
+  { label: "WOM", key: "wom", min: 0, max: 1, step: 1, integer: true, boolean: true },
+  { label: "SCENARIO", key: "scenario", step: 1, integer: true },
+  { label: "LEARNING_PERIODS", key: "learningPeriods", min: 0, step: 1, integer: true },
+  { label: "SAVED_ENDORSEMENTS", key: "savedEndorsements", min: 0, max: 1, step: 1, integer: true, boolean: true },
+  { label: "SAVED_REPOSTS_PER_SOURCE", key: "savedRepostsPerSource", min: 0, max: 1, step: 1, integer: true, boolean: true },
+  { label: "SAVED_DETAILED_AGENT_DECISIONS", key: "savedDetailedAgentDecisions", min: 0, max: 1, step: 1, integer: true, boolean: true },
+  { label: "SAVED_AGENT_DECISIONS", key: "savedAgentDecisions", min: 0, max: 1, step: 1, integer: true, boolean: true },
+  { label: "COMPRESSED_RESULTS", key: "compressedResults", min: 0, max: 1, step: 1, integer: true, boolean: true }
+];
+
 const DISABLED_SCENARIO = -1;
 const CUSTOM_SCENARIO = -2;
 const app = document.querySelector<HTMLDivElement>("#app");
@@ -166,14 +216,7 @@ app.innerHTML = `
 
       <section class="section">
         <h2>Configuration</h2>
-        <div class="config-grid">
-          <label>Periods <input id="periods" type="number" min="1" disabled /></label>
-          <label>Agents <input id="agents" type="number" min="1" disabled /></label>
-          <label>Repetitions <input id="repetitions" type="number" min="0" disabled /></label>
-          <label>Learning periods <input id="learningPeriods" type="number" min="0" disabled /></label>
-        </div>
-        <label class="toggle"><input id="wom" type="checkbox" disabled /> Word of mouth</label>
-        <label class="toggle"><input id="sourceReach" type="checkbox" disabled /> Source reach filtering</label>
+        <div class="config-table" id="configFields"></div>
       </section>
 
       <section class="section links">
@@ -251,12 +294,7 @@ const els = {
   runButton: byId<HTMLButtonElement>("runButton"),
   inputName: byId<HTMLParagraphElement>("inputName"),
   headline: byId<HTMLHeadingElement>("headline"),
-  periods: byId<HTMLInputElement>("periods"),
-  agents: byId<HTMLInputElement>("agents"),
-  repetitions: byId<HTMLInputElement>("repetitions"),
-  learningPeriods: byId<HTMLInputElement>("learningPeriods"),
-  wom: byId<HTMLInputElement>("wom"),
-  sourceReach: byId<HTMLInputElement>("sourceReach"),
+  configFields: byId<HTMLDivElement>("configFields"),
   sourceCount: byId<HTMLSpanElement>("sourceCount"),
   attributeCount: byId<HTMLSpanElement>("attributeCount"),
   periodCount: byId<HTMLSpanElement>("periodCount"),
@@ -280,6 +318,7 @@ let lastOutput: SimulationOutput | null = null;
 const logLines: string[] = [];
 
 renderExamples();
+renderConfigFields(null);
 wireEvents();
 log("INFO", "Web application ready. Load an Excel workbook or choose an example.");
 
@@ -300,6 +339,23 @@ function renderExamples(): void {
   }
 }
 
+function renderConfigFields(config: Config | null): void {
+  els.configFields.innerHTML = CONFIG_FIELDS.map((field) => {
+    const value = config ? configValueToInput(config, field) : "";
+    const min = field.min == null ? "" : ` min="${field.min}"`;
+    const max = field.max == null ? "" : ` max="${field.max}"`;
+    const step = ` step="${field.step ?? 1}"`;
+    const disabled = config ? "" : " disabled";
+    const mode = field.boolean ? " data-binary=\"true\"" : "";
+    return `
+      <label class="config-row">
+        <span>${field.label}</span>
+        <input type="number" inputmode="decimal" data-config-key="${field.key}" value="${value}"${min}${max}${step}${mode}${disabled} />
+      </label>
+    `;
+  }).join("");
+}
+
 function wireEvents(): void {
   els.fileInput.addEventListener("change", async () => {
     const file = els.fileInput.files?.[0];
@@ -314,10 +370,8 @@ function wireEvents(): void {
   });
   els.showImages.addEventListener("click", () => showImageDialog());
   els.closeDialog.addEventListener("click", () => els.imageDialog.close());
-
-  for (const id of ["periods", "agents", "repetitions", "learningPeriods", "wom", "sourceReach"]) {
-    byId<HTMLInputElement>(id).addEventListener("change", syncConfigFromControls);
-  }
+  els.configFields.addEventListener("input", syncConfigFromControls);
+  els.configFields.addEventListener("change", syncConfigFromControls);
 }
 
 async function loadExample(path: string, fileName: string): Promise<void> {
@@ -1063,8 +1117,8 @@ function renderLineChart(title: string, labels: string[], rows: RepostsData[]): 
 
 function updateLoadedInputUi(model: InputModel | null): void {
   const enabled = Boolean(model);
-  for (const input of [els.periods, els.agents, els.repetitions, els.learningPeriods, els.wom, els.sourceReach]) input.disabled = !enabled;
   els.runButton.disabled = !enabled;
+  renderConfigFields(model?.config ?? null);
 
   if (!model) {
     els.inputName.textContent = "No workbook loaded";
@@ -1078,12 +1132,6 @@ function updateLoadedInputUi(model: InputModel | null): void {
 
   els.inputName.textContent = model.name;
   els.headline.textContent = "Ready to run the simulation.";
-  els.periods.value = String(model.config.periods);
-  els.agents.value = String(model.config.agents);
-  els.repetitions.value = String(model.config.repetitions);
-  els.learningPeriods.value = String(model.config.learningPeriods);
-  els.wom.checked = model.config.wom;
-  els.sourceReach.checked = model.config.sourceReach;
   els.sourceCount.textContent = String(model.config.newsSources);
   els.attributeCount.textContent = String(model.config.attributesSource);
   els.periodCount.textContent = String(model.config.periods * (model.config.repetitions + 1));
@@ -1094,13 +1142,42 @@ function updateLoadedInputUi(model: InputModel | null): void {
 
 function syncConfigFromControls(): void {
   if (!loadedInput) return;
-  loadedInput.config.periods = Math.max(1, Math.trunc(Number(els.periods.value)));
-  loadedInput.config.agents = Math.max(1, Math.trunc(Number(els.agents.value)));
-  loadedInput.config.repetitions = Math.max(0, Math.trunc(Number(els.repetitions.value)));
-  loadedInput.config.learningPeriods = Math.max(0, Math.trunc(Number(els.learningPeriods.value)));
-  loadedInput.config.wom = els.wom.checked;
-  loadedInput.config.sourceReach = els.sourceReach.checked;
+  for (const field of CONFIG_FIELDS) {
+    const input = configInput(field.key);
+    if (!input) continue;
+    const parsed = parseConfigInput(input.value, field);
+    setConfigValue(loadedInput.config, field, parsed);
+    input.value = configValueToInput(loadedInput.config, field);
+  }
   els.periodCount.textContent = String(loadedInput.config.periods * (loadedInput.config.repetitions + 1));
+}
+
+function configInput(key: ConfigEditableKey): HTMLInputElement | null {
+  return els.configFields.querySelector<HTMLInputElement>(`input[data-config-key="${key}"]`);
+}
+
+function parseConfigInput(value: string, field: ConfigField): number {
+  let parsed = Number(value);
+  if (!Number.isFinite(parsed)) parsed = field.min ?? 0;
+  if (field.integer || field.boolean) parsed = Math.trunc(parsed);
+  if (field.boolean) parsed = parsed === 0 ? 0 : 1;
+  if (field.min != null) parsed = Math.max(field.min, parsed);
+  if (field.max != null) parsed = Math.min(field.max, parsed);
+  return parsed;
+}
+
+function configValueToInput(config: Config, field: ConfigField): string {
+  const value = config[field.key];
+  if (typeof value === "boolean") return value ? "1" : "0";
+  return String(value);
+}
+
+function setConfigValue(config: Config, field: ConfigField, value: number): void {
+  if (field.boolean) {
+    (config[field.key] as boolean) = value === 1;
+    return;
+  }
+  (config[field.key] as number) = value;
 }
 
 function displayOutput(output: SimulationOutput): void {
@@ -1139,6 +1216,9 @@ function resetResults(): void {
 function setBusy(isBusy: boolean, label: string): void {
   els.runButton.disabled = isBusy || !loadedInput;
   els.fileInput.disabled = isBusy;
+  els.configFields.querySelectorAll<HTMLInputElement>("input").forEach((input) => {
+    input.disabled = isBusy || !loadedInput;
+  });
   els.progressLabel.textContent = label;
 }
 

@@ -129,10 +129,9 @@ button,
   font-size: 0.84rem;
 }
 
-.config-grid {
+.config-table {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: 6px;
 }
 
 label {
@@ -148,6 +147,29 @@ input[type="number"] {
   color: #1d2528;
   min-height: 38px;
   padding: 0 10px;
+}
+
+.config-row {
+  align-items: center;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) 92px;
+}
+
+.config-row span {
+  color: #394448;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 0.78rem;
+  overflow-wrap: anywhere;
+}
+
+.config-row input {
+  text-align: right;
+}
+
+.config-row input[data-binary="true"] {
+  border-color: #9fc3bd;
+  background: #f4fbf9;
 }
 
 .toggle {
