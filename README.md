@@ -101,6 +101,20 @@ java -cp "build/classes:lib/*" Main \
   --no-gui
 ```
 
+## Example Scenario Results
+
+The following example compares four 40-period runs with 200 SNS users. Each line shows reposts per period for one source type: traditional media, unknown media, fake-news source, and mixed source.
+
+![Scenario comparison](imgs/scenario-comparison.png)
+
+The `Baseline` panel represents the default media ecosystem with contact-based sharing enabled. Traditional media receives the highest repost volume, while fake-news sources remain comparatively low because they combine lower credibility and lower reach.
+
+The `No WOM` panel disables contact-based sharing. This isolates direct source evaluation from social recommendations, reducing the social reinforcement effect that can amplify source visibility through user contacts.
+
+The `Coordinated Push` panel activates the intervention configured in `FAKENEWS_COORDINATED_PUSH.xlsx`: after period 15, `UNKNOWN_MEDIA` adopts selected fake-news-source values for simple language, sensationalism, and entertainment. This scenario is useful for studying how a source that is not explicitly labeled as fake can become more attractive by adopting high-engagement content features.
+
+The `Media Literacy` panel represents a countermeasure-style population: users give more weight to information quality and less weight to sensationalism and negative emotion. In this run, reposts concentrate more strongly around traditional media and reduce the relative presence of mixed and fake-news sources.
+
 ## Tests
 
 Run:
