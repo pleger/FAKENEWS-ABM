@@ -219,10 +219,24 @@ app.innerHTML = `
         <div class="config-table" id="configFields"></div>
       </section>
 
-      <section class="section links">
-        <a href="https://github.com/pleger/FAKENEWS_ABM" target="_blank" rel="noreferrer">GitHub repository</a>
-        <a href="https://pleger.cl" target="_blank" rel="noreferrer">pleger.cl</a>
-        <a href="https://www.linkedin.com/in/plegerm/" target="_blank" rel="noreferrer">LinkedIn</a>
+      <section class="section contact-links" aria-label="Contact links">
+        <h2>Links</h2>
+        <a class="icon-link" href="https://github.com/pleger/FAKENEWS-ABM" target="_blank" rel="noreferrer" title="GitHub repository">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.18-3.37-1.18-.45-1.15-1.1-1.46-1.1-1.46-.9-.61.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.88 1.52 2.32 1.08 2.89.83.09-.65.35-1.08.63-1.33-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0 1 12 6.02c.85 0 1.7.11 2.5.34 1.9-1.29 2.74-1.02 2.74-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.86v2.76c0 .27.18.58.69.48A10 10 0 0 0 12 2Z"/></svg>
+          <span>GitHub</span>
+        </a>
+        <a class="icon-link" href="https://pleger.cl" target="_blank" rel="noreferrer" title="Personal website">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm6.93 9h-3.19a15.8 15.8 0 0 0-1.05-5.03A8.03 8.03 0 0 1 18.93 11ZM12 4.04c.7 1.01 1.52 3.05 1.72 6.96h-3.44c.2-3.91 1.02-5.95 1.72-6.96ZM4.26 13h3.99c.12 2.1.5 3.9 1.06 5.03A8.03 8.03 0 0 1 4.26 13Zm3.99-2H4.26a8.03 8.03 0 0 1 5.05-5.03A15.8 15.8 0 0 0 8.25 11ZM12 19.96c-.7-1.01-1.52-3.05-1.72-6.96h3.44c-.2 3.91-1.02 5.95-1.72 6.96Zm2.69-1.93c.56-1.13.94-2.93 1.06-5.03h3.99a8.03 8.03 0 0 1-5.05 5.03Z"/></svg>
+          <span>Website</span>
+        </a>
+        <a class="icon-link" href="https://www.linkedin.com/in/plegerm/" target="_blank" rel="noreferrer" title="LinkedIn profile">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6.94 8.98H3.7V20h3.24V8.98ZM5.32 4a1.88 1.88 0 1 0 0 3.76A1.88 1.88 0 0 0 5.32 4Zm15 9.68c0-3.36-1.79-4.93-4.18-4.93a3.61 3.61 0 0 0-3.25 1.79V8.98H9.78V20h3.24v-5.45c0-1.44.27-2.84 2.06-2.84 1.76 0 1.78 1.65 1.78 2.93V20h3.24v-6.32h.22Z"/></svg>
+          <span>LinkedIn</span>
+        </a>
+        <a class="icon-link" href="mailto:pleger@ucn.cl" title="Email Paul Leger">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Zm8 7.15L4.62 7H4v.7l8 5.6 8-5.6V7h-.62L12 12.15Z"/></svg>
+          <span>pleger@ucn.cl</span>
+        </a>
       </section>
     </aside>
 

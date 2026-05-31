@@ -179,15 +179,45 @@ input[type="number"] {
   margin-top: 14px;
 }
 
-.links {
-  display: flex;
-  flex-wrap: wrap;
+.contact-links {
+  display: grid;
   gap: 10px;
 }
 
-.links a {
-  color: #0f766e;
+.icon-link {
+  align-items: center;
+  background: #fffdfa;
+  border: 1px solid #cfc7ba;
+  border-radius: 8px;
+  color: #243034;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 28px minmax(0, 1fr);
+  min-height: 46px;
+  padding: 8px 10px;
+  text-decoration: none;
+}
+
+.icon-link:hover,
+.icon-link:focus-visible {
+  border-color: #0f766e;
+  box-shadow: 0 0 0 3px rgb(15 118 110 / 0.14);
+  outline: none;
+}
+
+.icon-link svg {
+  background: #e5f2ef;
+  border-radius: 8px;
+  fill: #0f766e;
+  height: 28px;
+  padding: 5px;
+  width: 28px;
+}
+
+.icon-link span {
   font-weight: 700;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .workspace {
