@@ -171,11 +171,13 @@ public class Reporter {
     private static void addSheet(XSSFWorkbook workbook, Sheet sheet) {
         Sheet newSheet = workbook.createSheet(sheet.getSheetName());
 
-        for (int i = 0; i < sheet.getLastRowNum(); ++i) {
+        for (int i = 0; i <= sheet.getLastRowNum(); ++i) {
             Row row = sheet.getRow(i);
+            if (row == null) continue;
             Row newRow = newSheet.createRow(i);
             for (int j = 0; j < row.getLastCellNum(); ++j) {
                 Cell cell = row.getCell(j);
+                if (cell == null) continue;
                 String cellType = cell.getCellTypeEnum().name();
                 Cell newCell = newRow.createCell(j);
                 if (cellType.equalsIgnoreCase("STRING")) {
@@ -183,6 +185,9 @@ public class Reporter {
                 }
                 if (cellType.equalsIgnoreCase("NUMERIC") || cellType.equalsIgnoreCase("FORMULA")) {
                     newCell.setCellValue(cell.getNumericCellValue());
+                }
+                if (cellType.equalsIgnoreCase("BOOLEAN")) {
+                    newCell.setCellValue(cell.getBooleanCellValue());
                 }
             }
         }
