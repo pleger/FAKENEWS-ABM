@@ -340,6 +340,13 @@ progress {
   gap: 14px;
 }
 
+.log-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
 pre {
   background: #182226;
   border-radius: 8px;
@@ -347,7 +354,8 @@ pre {
   font-size: 0.83rem;
   line-height: 1.5;
   margin: 0;
-  max-height: 320px;
+  min-height: 520px;
+  max-height: 68vh;
   overflow: auto;
   padding: 16px;
   white-space: pre-wrap;

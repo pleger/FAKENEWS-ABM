@@ -99,6 +99,11 @@ type SimulationOutput = {
 };
 
 type LogLevel = "INFO" | "WARN" | "ERROR" | "DEBUG";
+type CsvExport = {
+  sheetName: string;
+  fileName: string;
+  rows: CellValue[][];
+};
 type ConfigEditableKey =
   | "periods"
   | "agents"
@@ -188,6 +193,7 @@ const CONFIG_FIELDS: ConfigField[] = [
 
 const DISABLED_SCENARIO = -1;
 const CUSTOM_SCENARIO = -2;
+const MAX_XLSX_ROWS = 100_000;
 const app = document.querySelector<HTMLDivElement>("#app");
 
 if (!app) {
@@ -286,7 +292,10 @@ app.innerHTML = `
       <section class="log-section">
         <div class="log-head">
           <h2>Simulation log</h2>
-          <button id="clearLog">Clear</button>
+          <div class="log-actions">
+            <a id="downloadLog" class="download disabled" href="#" download="simulation-log.txt">Download log</a>
+            <button id="clearLog">Clear</button>
+          </div>
         </div>
         <pre id="log"></pre>
       </section>
@@ -318,6 +327,7 @@ const els = {
   validation: byId<HTMLDivElement>("validation"),
   log: byId<HTMLPreElement>("log"),
   clearLog: byId<HTMLButtonElement>("clearLog"),
+  downloadLog: byId<HTMLAnchorElement>("downloadLog"),
   showImages: byId<HTMLButtonElement>("showImages"),
   downloadZip: byId<HTMLAnchorElement>("downloadZip"),
   downloadWorkbook: byId<HTMLAnchorElement>("downloadWorkbook"),
@@ -329,6 +339,7 @@ const els = {
 
 let loadedInput: InputModel | null = null;
 let lastOutput: SimulationOutput | null = null;
+let logDownloadUrl: string | null = null;
 const logLines: string[] = [];
 
 renderExamples();
@@ -381,6 +392,7 @@ function wireEvents(): void {
   els.clearLog.addEventListener("click", () => {
     logLines.length = 0;
     els.log.textContent = "";
+    refreshLogDownload();
   });
   els.showImages.addEventListener("click", () => showImageDialog());
   els.closeDialog.addEventListener("click", () => els.imageDialog.close());
@@ -611,7 +623,7 @@ async function runCurrentSimulation(): Promise<void> {
     log("INFO", `Main: Simulation executions took ${(output.elapsedMs / 1000).toFixed(2)} seconds`);
     log("INFO", "Main: End.");
   } catch (error) {
-    log("ERROR", `Simulation failed: ${String(error)}`);
+    log("ERROR", `Simulation failed: ${formatError(error)}`);
   } finally {
     setBusy(false, "Complete");
   }
@@ -983,19 +995,36 @@ function selectByProbability(evaluations: Map<number, number>): number {
 async function createOutputs(model: InputModel, reporter: ReporterStore, elapsedMs: number): Promise<SimulationOutput> {
   log("INFO", "Reporter: Adding sheets");
   const workbook = XLSX.utils.book_new();
+  const csvExports: CsvExport[] = [];
   addAoASheet(workbook, "Configuration", configRows(model.config));
   for (const name of ["NewsSources", "SNSUsers", "SourceReach", "Scenario"]) {
     if (model.sheets[name]) addAoASheet(workbook, name, model.sheets[name]);
   }
-  addAoASheet(workbook, "RepostsPerSource", repostRows(model.newsSources, reporter.repostsPerSourceData));
-  addAoASheet(workbook, "UniqueRepostersPerSource", repostRows(model.newsSources, reporter.uniqueRepostersPerSourceData));
-  addAoASheet(workbook, "Results", decisionRows(reporter.agentDecisionData));
-  addAoASheet(workbook, "DetailedResult", decisionRows(reporter.detailedAgentDecisionData));
-  addAoASheet(workbook, "Endorsements", endorsementRows(reporter.endorsementData));
+  const reportTables = [
+    { sheetName: "RepostsPerSource", fileName: "reposts-per-source.csv", rows: repostRows(model.newsSources, reporter.repostsPerSourceData) },
+    { sheetName: "UniqueRepostersPerSource", fileName: "unique-reposters-per-source.csv", rows: repostRows(model.newsSources, reporter.uniqueRepostersPerSourceData) },
+    { sheetName: "Results", fileName: "results.csv", rows: decisionRows(reporter.agentDecisionData) },
+    { sheetName: "DetailedResult", fileName: "detailed-result.csv", rows: decisionRows(reporter.detailedAgentDecisionData) },
+    { sheetName: "Endorsements", fileName: "endorsements.csv", rows: endorsementRows(reporter.endorsementData) }
+  ];
+  for (const table of reportTables) addReportSheet(workbook, csvExports, table.sheetName, table.fileName, table.rows);
   addAoASheet(workbook, "ScenarioChanges", scenarioRows(model));
+  if (csvExports.length > 0) {
+    addAoASheet(workbook, "ExportedCsvFiles", csvExportIndexRows(csvExports));
+  }
 
   log("INFO", "Reporter: Writing browser artifacts");
-  const workbookArray = XLSX.write(workbook, { bookType: "xlsx", type: "array" }) as ArrayBuffer;
+  let workbookArray: ArrayBuffer;
+  try {
+    workbookArray = XLSX.write(workbook, { bookType: "xlsx", type: "array", compression: true }) as ArrayBuffer;
+  } catch (error) {
+    log("WARN", `Reporter: Workbook was too large for browser XLSX generation. Falling back to CSV report files. ${formatError(error)}`);
+    for (const table of reportTables) addCsvExport(csvExports, table.sheetName, table.fileName, table.rows);
+    const fallbackWorkbook = XLSX.utils.book_new();
+    addAoASheet(fallbackWorkbook, "Configuration", configRows(model.config));
+    addAoASheet(fallbackWorkbook, "ExportedCsvFiles", csvExportIndexRows(csvExports));
+    workbookArray = XLSX.write(fallbackWorkbook, { bookType: "xlsx", type: "array", compression: true }) as ArrayBuffer;
+  }
   const workbookBlob = new Blob([workbookArray], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
   const imageBlobs = await createChartImages(model, reporter);
   const imageUrls = imageBlobs.map((blob) => URL.createObjectURL(blob));
@@ -1004,6 +1033,9 @@ async function createOutputs(model: InputModel, reporter: ReporterStore, elapsed
   const outputFolder = `${model.config.fileName}_${stamp}`;
   zip.file(`${outputFolder}/${model.config.fileName}_${stamp}.xlsx`, workbookBlob);
   zip.file(`${outputFolder}/simulation.log`, logLines.join("\n"));
+  for (const csvExport of csvExports) {
+    zip.file(`${outputFolder}/${csvExport.fileName}`, rowsToCsv(csvExport.rows));
+  }
   imageBlobs.forEach((blob, index) => zip.file(`${outputFolder}/chart-${index + 1}.png`, blob));
   const zipBlob = await zip.generateAsync({ type: "blob" });
   const zipUrl = URL.createObjectURL(zipBlob);
@@ -1014,6 +1046,43 @@ async function createOutputs(model: InputModel, reporter: ReporterStore, elapsed
 
 function addAoASheet(workbook: XLSX.WorkBook, name: string, rows: CellValue[][]): void {
   XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(rows), name.slice(0, 31));
+}
+
+function addReportSheet(workbook: XLSX.WorkBook, csvExports: CsvExport[], sheetName: string, fileName: string, rows: CellValue[][]): void {
+  if (rows.length <= MAX_XLSX_ROWS) {
+    addAoASheet(workbook, sheetName, rows);
+    return;
+  }
+  addCsvExport(csvExports, sheetName, fileName, rows);
+  log("WARN", `Reporter: ${sheetName} has ${rows.length - 1} data rows; exporting it as ${fileName} inside the ZIP.`);
+}
+
+function addCsvExport(csvExports: CsvExport[], sheetName: string, fileName: string, rows: CellValue[][]): void {
+  if (!csvExports.some((item) => item.fileName === fileName)) {
+    csvExports.push({ sheetName, fileName, rows });
+  }
+}
+
+function csvExportIndexRows(exports: CsvExport[]): CellValue[][] {
+  return [
+    ["SHEET", "ROWS", "CSV_FILE", "NOTE"],
+    ...exports.map((item) => [
+      item.sheetName,
+      Math.max(0, item.rows.length - 1),
+      item.fileName,
+      `Exported as CSV because the browser workbook limit is ${MAX_XLSX_ROWS} rows per generated sheet.`
+    ])
+  ];
+}
+
+function rowsToCsv(rows: CellValue[][]): string {
+  return rows.map((row) => row.map(csvCell).join(",")).join("\n");
+}
+
+function csvCell(value: CellValue): string {
+  if (value == null) return "";
+  const textValue = String(value);
+  return /[",\n\r]/.test(textValue) ? `"${textValue.replace(/"/g, '""')}"` : textValue;
 }
 
 function configRows(config: Config): CellValue[][] {
@@ -1090,7 +1159,7 @@ function renderLineChart(title: string, labels: string[], rows: RepostsData[]): 
   const top = 112;
   const width = 1040;
   const height = 470;
-  const maxValue = Math.max(1, ...rows.flatMap((row) => row.reposts));
+  const maxValue = rows.reduce((max, row) => Math.max(max, ...row.reposts), 1);
   const periods = [...new Set(rows.map((row) => row.period))].sort((a, b) => a - b);
   const colors = ["#0f766e", "#b42318", "#7c3aed", "#b7791f", "#2563eb", "#db2777"];
 
@@ -1248,6 +1317,22 @@ function log(level: LogLevel, message: string): void {
   logLines.push(line);
   els.log.textContent = logLines.join("\n");
   els.log.scrollTop = els.log.scrollHeight;
+  refreshLogDownload();
+}
+
+function refreshLogDownload(): void {
+  if (logDownloadUrl) URL.revokeObjectURL(logDownloadUrl);
+  if (logLines.length === 0) {
+    logDownloadUrl = null;
+    els.downloadLog.classList.add("disabled");
+    els.downloadLog.removeAttribute("href");
+    return;
+  }
+  const blob = new Blob([logLines.join("\n")], { type: "text/plain;charset=utf-8" });
+  logDownloadUrl = URL.createObjectURL(blob);
+  els.downloadLog.href = logDownloadUrl;
+  els.downloadLog.download = `simulation-log-${timestamp()}.txt`;
+  els.downloadLog.classList.remove("disabled");
 }
 
 function text(value: CellValue): string {
@@ -1287,6 +1372,11 @@ function timestamp(): string {
 
 function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" })[char] ?? char);
+}
+
+function formatError(error: unknown): string {
+  if (error instanceof Error) return error.stack ?? error.message;
+  return String(error);
 }
 
 function nextFrame(): Promise<void> {
