@@ -60,6 +60,8 @@ Workbook sheets:
 
 ## CLI
 
+The Java implementation is the reference simulation core. Its source code lives in `src/`, tests in `tests/`, Java libraries in `lib/`, and Java CLI scripts in `bin/`.
+
 Build:
 
 ```sh
@@ -117,11 +119,12 @@ The `Media Literacy` panel represents a countermeasure-style population: users g
 
 ## Browser TypeScript App
 
-The repository also includes a backend-free TypeScript implementation with a web UI. It runs the ABM directly in the browser, reads Excel workbooks, validates the same configuration fields used by `Configuration.java`, displays simulation progress and logs, renders generated chart images, and produces downloadable workbook/ZIP artifacts.
+The backend-free TypeScript implementation lives entirely in `web/`. It runs the ABM directly in the browser, reads Excel workbooks, validates the same configuration fields used by `Configuration.java`, displays simulation progress and logs, renders generated chart images, and produces downloadable workbook/ZIP artifacts.
 
 Install and run:
 
 ```sh
+cd web
 npm install
 npm run dev
 ```
@@ -132,6 +135,28 @@ Then open the local URL printed by Vite. The app includes two bundled examples:
 - `FAKENEWS_COORDINATED_PUSH.xlsx`
 
 You can also load any compatible `.xlsx` workbook through the file picker.
+
+Build the static web app:
+
+```sh
+cd web
+npm run build
+```
+
+The build output is written to `web/dist/` and is deployed to GitHub Pages.
+
+## Project Layout
+
+- `src/`: Java reference implementation and simulation core.
+- `tests/`: Java tests for the reference implementation.
+- `input/`: Excel workbooks consumed by the Java CLI.
+- `web/`: TypeScript browser implementation and GitHub Pages app.
+- `web/src/`: TypeScript port of the model, loader, reporter, charts, and UI.
+- `web/public/examples/`: Excel examples bundled into the web app.
+- `imgs/`: README and report images.
+- `output/`, `build/`, `dist/`, `web/dist/`, and `node_modules/`: generated artifacts.
+
+When changing model behavior in Java, treat `src/` as the source of truth and then mirror the same behavioral change in `web/src/main.ts`. This keeps the browser version aligned with the Java CLI while keeping the two implementations easy to distinguish.
 
 ## Tests
 
