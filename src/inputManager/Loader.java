@@ -7,11 +7,12 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
+import scenarios.ScenarioFactory;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -21,6 +22,7 @@ public class Loader {
     private static Sheet snsUsers;
     private static Sheet sourceReach;
     private static Sheet scenario;
+    private static Workbook workbook;
 
     public static void load(String file) {
         File input = determineInputFile(file);
@@ -31,8 +33,11 @@ public class Loader {
 
     private static void read(File file) {
         try {
-            FileInputStream fileStream = new FileInputStream(file);
-            Workbook workbook = WorkbookFactory.create(fileStream);
+            close();
+            ScenarioFactory.clear();
+            Scenarios.clear();
+
+            workbook = WorkbookFactory.create(file, null, true);
             showAvailableSheets(workbook);
 
             configuration = workbook.getSheet("Configuration");
@@ -55,10 +60,18 @@ public class Loader {
             Configuration.setAttributes(NewsSources.attributeSize(), SNSUsers.attributeSize());
             Configuration.setNewsSources(NewsSources.getInnerNewsSources().size());
         } catch (Exception ex) {
-            Console.error("Loader.read: Input cannot be open: " + file.getAbsolutePath());
-            Console.error("Loader.read: ERROR: " + ex);
-            ex.printStackTrace();
-            System.exit(1);
+            Error.trigger("Loader.read: Input cannot be opened: " + file.getAbsolutePath(), ex);
+        }
+    }
+
+    public static void close() {
+        if (workbook != null) {
+            try {
+                workbook.close();
+            } catch (IOException ex) {
+                Console.warn("Loader.close: input workbook could not be closed: " + ex);
+            }
+            workbook = null;
         }
     }
 
@@ -167,9 +180,7 @@ public class Loader {
     }
 
     private static File determineInputFile(String inputFileName) {
-        inputFileName = inputFileName.equals("") ? "" : inputFileName;
-
-        if (inputFileName.equals("")) {
+        if (inputFileName.isEmpty()) {
             try (BufferedReader br = new BufferedReader(new FileReader("input.txt"))) {
                 inputFileName = br.readLine();
             } catch (Exception e) {
@@ -178,7 +189,7 @@ public class Loader {
             }
         }
 
-        inputFileName = inputFileName.equals("") ? Configuration.DEFAULT_FILE_NAME : inputFileName;
+        inputFileName = inputFileName.isEmpty() ? Configuration.DEFAULT_FILE_NAME : inputFileName;
         ArrayList<File> candidates = new ArrayList<>();
         File given = new File(inputFileName);
         candidates.add(given);

@@ -11,6 +11,7 @@ import scenarios.ScenarioManager;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class Simulation implements FlyWeight, Step, ReportRegister {
     public static int ID = 0;
@@ -78,20 +79,29 @@ public class Simulation implements FlyWeight, Step, ReportRegister {
     }
 
     public void run() {
-        Console.info("Simulation: Starting " + Simulation.ID);
+        Console.info("Simulation: Starting " + Simulation.ID + " with periods=" + periods +
+                ", learningPeriods=" + Configuration.LEARNING_PERIODS +
+                ", wom=" + Configuration.WOM +
+                ", sourceReach=" + Configuration.SOURCE_REACH);
+        logNetworkSummary();
 
         for (int period = 1; period <= periods; ++period) {
+            Console.info("Simulation: Period " + period + "/" + periods + " started");
             doStep(period);
-            Console.debug("Simulation: Period " + period);
 
             ScenarioManager.apply(period);
             report(period);
 
+            int recommendations = 0;
             if (Configuration.WOM) {
                 for (SNSUser snsUser : snsUsers) {
-                    snsUser.receiveRecommendation(period);
+                    if (snsUser.receiveRecommendation(period)) {
+                        ++recommendations;
+                    }
                 }
             }
+
+            logPeriodSummary(period, recommendations);
         }
 
         if (Configuration.GUI) {
@@ -99,7 +109,42 @@ public class Simulation implements FlyWeight, Step, ReportRegister {
             Chart.displayReposts(newsSources);
         }
 
+        Console.info("Simulation: Completed " + Simulation.ID + " periods=" + periods);
         reinit();
+    }
+
+    private void logNetworkSummary() {
+        int totalKnownSources = 0;
+        int totalFriends = 0;
+
+        for (SNSUser snsUser : snsUsers) {
+            totalKnownSources += snsUser.getKnownNewsSourceCount();
+            totalFriends += snsUser.getFriendCount();
+        }
+
+        double averageKnownSources = snsUsers.isEmpty() ? 0 : (double) totalKnownSources / snsUsers.size();
+        double averageFriends = snsUsers.isEmpty() ? 0 : (double) totalFriends / snsUsers.size();
+
+        Console.info("Simulation: Network ready for " + Simulation.ID +
+                " users=" + snsUsers.size() +
+                ", newsSources=" + newsSources.size() +
+                ", avgKnownSources=" + String.format(Locale.US, "%.2f", averageKnownSources) +
+                ", avgFriends=" + String.format(Locale.US, "%.2f", averageFriends));
+    }
+
+    private void logPeriodSummary(int period, int recommendations) {
+        int selections = 0;
+        for (SNSUser snsUser : snsUsers) {
+            if (snsUser.getLastSelectMarked(period) != null) {
+                ++selections;
+            }
+        }
+
+        String reportingState = period > Configuration.LEARNING_PERIODS ? "saved" : "learning";
+        Console.info("Simulation: Period " + period + "/" + periods +
+                " completed selections=" + selections + "/" + snsUsers.size() +
+                ", reportState=" + reportingState +
+                ", womRecommendations=" + recommendations);
     }
 
 

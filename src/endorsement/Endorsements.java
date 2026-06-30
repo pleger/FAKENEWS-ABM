@@ -41,7 +41,8 @@ public class Endorsements {
     }
 
     public Endorsements filterByMemory(int period) {
-        return filter(endor -> endor.getPeriod() > period - Configuration.MEMORY || Configuration.MEMORY == -1);
+        return filter(endor -> Configuration.MEMORY == Configuration.MEMORY_INFINITE ||
+                endor.getPeriod() > period - Configuration.MEMORY);
     }
 
     public Endorsements filterByPeriod(int period) {

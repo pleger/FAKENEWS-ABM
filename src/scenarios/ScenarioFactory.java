@@ -14,10 +14,14 @@ public class ScenarioFactory {
     private final static List<Scenario> scenarios = new ArrayList<>();
 
     public static Scenario get(int id) {
-        if (scenarios.size() == 0) {
+        if (scenarios.isEmpty()) {
             makeScenarios();
         }
         return getScenario(id);
+    }
+
+    public static void clear() {
+        scenarios.clear();
     }
 
     private static Scenario getScenario(int id) {

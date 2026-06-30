@@ -27,8 +27,7 @@ public class Console {
             fh.setFormatter(new SimpleFormatter());
             logger.addHandler(fh);
         } catch (Exception e) {
-            System.out.println("ERROR: Console.setLogFile: output.log could not created");
-            e.printStackTrace();
+            System.err.println("ERROR: Console.setLogFile: output.log could not be created: " + e);
         }
     }
 
@@ -60,6 +59,11 @@ public class Console {
     public static void error(Object msg) {
         initLoggerRequired();
         logger.severe(msg.toString());
+    }
+
+    public static void error(Object msg, Throwable throwable) {
+        initLoggerRequired();
+        logger.log(Level.SEVERE, msg.toString(), throwable);
     }
 
     public static void warn(Object msg) {

@@ -5,6 +5,7 @@ import agent.NewsSourceFactory;
 import endorsement.AttributesNewsSource;
 import inputManager.Configuration;
 import utils.Console;
+import utils.Error;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,7 +27,7 @@ public class Scenario {
     }
 
     public void apply(int period) {
-        if (period == this.start || period == -1) {
+        if (period == this.start) {
             Console.info("ScenarioManager: Applying Scenario " + Configuration.SCENARIO +"  [" + this + "]");
             copyAttributes(NewsSourceFactory.getNewsSource(from), NewsSourceFactory.getNewsSource(to), atts);
         }
@@ -36,20 +37,32 @@ public class Scenario {
         return id;
     }
 
+    public AttributesNewsSource attributesAfterApplyingTo(NewsSource newsSource) {
+        if (!newsSource.getName().equals(to)) {
+            return newsSource.getAttributes();
+        }
+
+        AttributesNewsSource attFrom = NewsSourceFactory.getNewsSource(from).getAttributes();
+        AttributesNewsSource attTo = newsSource.getAttributes();
+        return buildAttributes(attFrom, attTo, atts);
+    }
+
     private static void copyAttributes(NewsSource from, NewsSource to, String[] names) {
         AttributesNewsSource attFrom = from.getAttributes();
         AttributesNewsSource attTo = to.getAttributes();
-        checkAttributes(attFrom, names);
-
-        AttributesNewsSource newAttTo = attTo.replaceAll(names, attFrom);
+        AttributesNewsSource newAttTo = buildAttributes(attFrom, attTo, names);
         checkDifference(attTo, newAttTo, names);
         to.setAttributes(newAttTo);
     }
 
+    private static AttributesNewsSource buildAttributes(AttributesNewsSource attFrom, AttributesNewsSource attTo, String[] names) {
+        checkAttributes(attFrom, names);
+        return attTo.replaceAll(names, attFrom);
+    }
+
     private static void checkAttributes(AttributesNewsSource attm, String[] names) {
         if (!attm.contains(names)) {
-            Console.error("SCENARIO X: some attributes not found");
-            System.exit(1);
+            Error.trigger("Scenario.checkAttributes: some attributes were not found: " + Arrays.toString(names));
         }
     }
 

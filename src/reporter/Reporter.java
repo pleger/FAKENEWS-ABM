@@ -11,6 +11,8 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import endorsement.AttributesNewsSource;
+import scenarios.Scenario;
 import scenarios.ScenarioFactory;
 
 import java.io.File;
@@ -35,25 +37,36 @@ public class Reporter {
     private static final List<UniqueRepostersPerSourceData> repostsUniquePerNewsSourceData = new ArrayList<>();
 
     public static void write() {
-        XSSFWorkbook workbook = new XSSFWorkbook();
-        Console.info("Reporter: Adding sheets");
+        try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+            Console.info("Reporter: Adding sheets");
 
-        writeConfiguration(workbook.createSheet("Configuration"));
-        addSheet(workbook, Loader.getNewsSources());
-        addSheet(workbook, Loader.getSNSUsers());
-        addSheet(workbook, Loader.getSourceReach());
-        if (Configuration.SCENARIO != Configuration.DISABLED) addSheet(workbook, Loader.getScenario());
+            writeConfiguration(workbook.createSheet("Configuration"));
+            addSheet(workbook, Loader.getNewsSources());
+            addSheet(workbook, Loader.getSNSUsers());
+            addSheet(workbook, Loader.getSourceReach());
+            if (Configuration.SCENARIO != Configuration.DISABLED) addSheet(workbook, Loader.getScenario());
 
 
-        writeRepostsPerNewsSource(workbook.createSheet("RepostsPerSource"), repostsPerNewsSourceData);
-        writeRepostsPerNewsSource(workbook.createSheet("UniqueRepostersPerSource"), repostsUniquePerNewsSourceData);
-        writeAgentDecision(workbook.createSheet("Results"));
-        writeDetailedAgentDecision(workbook.createSheet("DetailedResult"));
-        writeEndorsements(workbook.createSheet("Endorsements"));
-        writeScenarioChanges(workbook.createSheet("ScenarioChanges"));
+            writeRepostsPerNewsSource(workbook.createSheet("RepostsPerSource"), repostsPerNewsSourceData);
+            writeRepostsPerNewsSource(workbook.createSheet("UniqueRepostersPerSource"), repostsUniquePerNewsSourceData);
+            writeAgentDecision(workbook.createSheet("Results"));
+            writeDetailedAgentDecision(workbook.createSheet("DetailedResult"));
+            writeEndorsements(workbook.createSheet("Endorsements"));
+            writeScenarioChanges(workbook.createSheet("ScenarioChanges"));
 
-        Console.info("Reporter: Writing to the disk");
-        writeDisk(workbook);
+            Console.info("Reporter: Writing to the disk");
+            writeDisk(workbook);
+        } catch (IOException ex) {
+            Error.trigger("Reporter.write: output workbook could not be closed\n.ERROR: " + ex, ex);
+        }
+    }
+
+    public static void clear() {
+        agentDecisionData.clear();
+        detailedAgentDecisionData.clear();
+        endorsData.clear();
+        repostsPerNewsSourceData.clear();
+        repostsUniquePerNewsSourceData.clear();
     }
 
     private static void writeScenarioChanges(XSSFSheet scenarios) {
@@ -61,7 +74,7 @@ public class Reporter {
         Console.info("Reporter: Information of Scenario Changes: " + enabled);
 
         if (enabled) {
-            ScenarioFactory.get(Configuration.SCENARIO).apply(-1);
+            Scenario scenario = ScenarioFactory.get(Configuration.SCENARIO);
             ArrayList<NewsSource> newsSources = NewsSourceFactory.getNewsSources();
 
             Row headRow = scenarios.createRow(0);
@@ -83,17 +96,16 @@ public class Reporter {
                 dataRow.createCell(2).setCellValue(mk.getReach());
 
                 column = 3;
-                for (String attributeName : mk.getAttributes().getNames()) {
-                    Double[] vals = mk.getAttributes().getValues(attributeName);
+                AttributesNewsSource attributes = scenario.attributesAfterApplyingTo(mk);
+                for (String attributeName : attributes.getNames()) {
+                    Double[] vals = attributes.getValues(attributeName);
                     dataRow.createCell(column).setCellValue(Arrays.toString(vals));
                     ++column;
                 }
                 ++rowIndex;
             }
 
-            for (int i = 0; i < 3 + newsSources.get(0).getAttributes().getNames().length; ++i) {
-                scenarios.autoSizeColumn(i);
-            }
+            setReadableColumnWidths(scenarios, 3 + newsSources.get(0).getAttributes().getNames().length);
         }
     }
 
@@ -259,8 +271,13 @@ public class Reporter {
             ++rowIndex;
         }
 
-        conf.autoSizeColumn(0);
-        conf.autoSizeColumn(1);
+        setReadableColumnWidths(conf, 2);
+    }
+
+    private static void setReadableColumnWidths(Sheet sheet, int columns) {
+        for (int i = 0; i < columns; ++i) {
+            sheet.setColumnWidth(i, 28 * 256);
+        }
     }
 
     private static void compressFolder() {
@@ -313,9 +330,9 @@ public class Reporter {
             DateFormat df = new SimpleDateFormat("dd-MM-yy(HH-mm-ss)");
             fullFileName += "_" + df.format(new Date()) + ".xlsx";
 
-            FileOutputStream file = new FileOutputStream(fullFileName);
-            workbook.write(file);
-            file.close();
+            try (FileOutputStream file = new FileOutputStream(fullFileName)) {
+                workbook.write(file);
+            }
             Console.info("Reporter: File saved.");
             compressFolder();
         } catch (IOException ex) {

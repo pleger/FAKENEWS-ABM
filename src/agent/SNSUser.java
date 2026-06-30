@@ -101,9 +101,17 @@ public class SNSUser implements Step, FlyWeight, ReportRegister {
         this.knownNewsSources = new ArrayList<>(newsSources);
     }
 
+    public int getFriendCount() {
+        return friends.size();
+    }
+
+    public int getKnownNewsSourceCount() {
+        return knownNewsSources.size();
+    }
+
     @Override
     public void doStep(int period) {
-        if (knownNewsSources.size() > 0) { //snsUser could not ignore all newsSources
+        if (!knownNewsSources.isEmpty()) { //snsUser could not ignore all newsSources
             endors.addAll(Interaction.interact(period, this, knownNewsSources));
             report(period);
 
@@ -125,7 +133,7 @@ public class SNSUser implements Step, FlyWeight, ReportRegister {
         return endorsData;
     }
 
-    public void receiveRecommendation(int period) {
+    public boolean receiveRecommendation(int period) {
         //System.out.println("---->RECEIVED RECOMMENDATION snsUser:" + getID() + " known newsSources:" + knownNewsSources.size() + " period:" + period);
 
         Map<Integer, Double> currentEvaluations = new HashMap<>();
@@ -138,6 +146,10 @@ public class SNSUser implements Step, FlyWeight, ReportRegister {
             }
         });
 
+        if (currentEvaluations.isEmpty()) {
+            return false;
+        }
+
         int selectedId = NewsSourceSelectionStrategies.BY_MAX(currentEvaluations);
         recommendedMk = NewsSourceFactory.getNewsSource(knownNewsSources, selectedId);
         if (recommendedMk == null) {
@@ -149,6 +161,7 @@ public class SNSUser implements Step, FlyWeight, ReportRegister {
         String attName = "WORD OF MOUTH";
         double mean = attribute.getValue(attName)/(2);
         endors.add(new Endorsement(period + 1, recommendedMk, attName, mean));
+        return true;
     }
 
     public NewsSource getLastSelectMarked(int period) {

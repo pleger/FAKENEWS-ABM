@@ -16,4 +16,8 @@ public class Scenarios {
     public static Scenario getScenario() {
         return scenario;
     }
+
+    public static void clear() {
+        scenario = null;
+    }
 }

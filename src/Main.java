@@ -26,23 +26,28 @@ public class Main {
 
         Loader.load(options.inputFile);
         options.applyOverrides();
+        Reporter.clear();
 
-        Console.info("MAIN: Configuration loaded -> {" + Configuration.toStringConfiguration() + " }");
-        Simulation s = new Simulation(SNSUserFactory.createFromInput(), NewsSourceFactory.createFromInput(),
-                Configuration.PERIODS);
+        try {
+            Console.info("MAIN: Configuration loaded -> {" + Configuration.toStringConfiguration() + " }");
+            Simulation s = new Simulation(SNSUserFactory.createFromInput(), NewsSourceFactory.createFromInput(),
+                    Configuration.PERIODS);
 
-        Instant start = Instant.now();
-        for (int i = 1; i <= Configuration.REPETITIONS + 1; ++i) {
-            Console.info(s);
-            s.run();
+            Instant start = Instant.now();
+            for (int i = 1; i <= Configuration.REPETITIONS + 1; ++i) {
+                Console.info(s);
+                s.run();
+            }
+            Instant end = Instant.now();
+
+
+            Duration timeElapsed = Duration.between(start, end);
+            Console.info("Main: Simulation executions took " + timeElapsed.toMinutes() + " mins");
+            Reporter.write();
+            Console.end("Main: End.");
+        } finally {
+            Loader.close();
         }
-        Instant end = Instant.now();
-
-
-        Duration timeElapsed = Duration.between(start, end);
-        Console.info("Main: Simulation executions took " + timeElapsed.toMinutes() + " mins");
-        Reporter.write();
-        Console.end("Main: End.");
     }
 
     private static final class CliOptions {
