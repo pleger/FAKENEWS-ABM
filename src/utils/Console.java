@@ -22,6 +22,10 @@ public class Console {
     }
 
     private static void setLogFile() {
+        if (Configuration.OUTPUT_DIRECTORY == null || Configuration.OUTPUT_DIRECTORY.trim().isEmpty()) {
+            return;
+        }
+
         try {
             FileHandler fh = new FileHandler(Configuration.OUTPUT_DIRECTORY+"/"+ FILE_NAME);
             fh.setFormatter(new SimpleFormatter());

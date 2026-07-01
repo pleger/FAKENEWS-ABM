@@ -32,14 +32,17 @@ public class TestRunner {
         testConfigurationAppliesPluralSavedEndorsementsKey();
         testConfigurationOutputOrderIsStable();
         testConfigurationRejectsInvalidValues();
+        testConfigurationAcceptsExcelDisabledScenario();
         testConfigurationAcceptsInfiniteMemoryConstant();
         testConfigurationRejectsInvalidMemoryValues();
+        testLargeConfigurationWithDetailedSavingIsAcceptedWithWarning();
         testLoaderReadsFakeNewsBaseline();
         testCustomizedScenarioCopiesSelectedAttributes();
         testScenarioReportPreviewDoesNotMutateSource();
         testProbabilitySelectionHandlesNonPositiveEvaluations();
         testRepeatedLoaderClearsScenarioCache();
         testReporterClearRemovesAccumulatedRows();
+        testReporterSplitsLargeEndorsementSheets();
         testEmptyWordOfMouthRecommendationsAreIgnored();
         testUserWithNoKnownSourcesCanStep();
         testMainWritesReporterWorkbookWithExpectedSheets();
@@ -108,6 +111,19 @@ public class TestRunner {
         passed++;
     }
 
+    private static void testConfigurationAcceptsExcelDisabledScenario() {
+        HashMap<String, Double> conf = validConfiguration();
+        conf.put("SCENARIO", 0.0);
+
+        Configuration.set(conf);
+
+        assertEquals("Excel SCENARIO=0 should map to internal disabled scenario",
+                Configuration.DISABLED, Configuration.SCENARIO);
+        assertEquals("configuration dump should keep internal disabled scenario",
+                Configuration.DISABLED, Configuration.toMap().get("SCENARIO"), 0.0001);
+        passed++;
+    }
+
     private static void testConfigurationAcceptsInfiniteMemoryConstant() {
         HashMap<String, Double> conf = validConfiguration();
         conf.put("MEMORY", (double) Configuration.MEMORY_INFINITE);
@@ -134,6 +150,22 @@ public class TestRunner {
             Configuration.set(conf);
         });
 
+        passed++;
+    }
+
+    private static void testLargeConfigurationWithDetailedSavingIsAcceptedWithWarning() {
+        HashMap<String, Double> conf = validConfiguration();
+        conf.put("PERIODS", 1_000.0);
+        conf.put("AGENTS", 1_000.0);
+        conf.put("REPETITIONS", 1.0);
+        conf.put("SAVED_ENDORSEMENTS", 1.0);
+
+        Configuration.set(conf);
+
+        assertEquals("large warning path should preserve configured periods", 1_000, Configuration.PERIODS);
+        assertEquals("large warning path should preserve configured agents", 1_000, Configuration.AGENTS);
+        assertEquals("large warning path should preserve configured repetitions", 1, Configuration.REPETITIONS);
+        assertTrue("large warning path should preserve detailed saving flag", Configuration.SAVED_ENDORSEMENTS);
         passed++;
     }
 
@@ -225,6 +257,45 @@ public class TestRunner {
 
         assertEquals("reporter clear should remove unique-repost rows", 0, Reporter.getRepostsPerSourceData().size());
         Configuration.SAVED_REPOSTS_PER_SOURCE = false;
+        passed++;
+    }
+
+    private static void testReporterSplitsLargeEndorsementSheets() {
+        Loader.load("FAKENEWS_BASELINE");
+        Configuration.SAVED_ENDORSEMENTS = true;
+        Configuration.SAVED_AGENT_DECISIONS = false;
+        Configuration.SAVED_DETAILED_AGENT_DECISIONS = false;
+        Configuration.SAVED_REPOSTS_PER_SOURCE = false;
+        Configuration.SCENARIO = Configuration.DISABLED;
+        Reporter.clear();
+
+        ArrayList<reporter.EndorsementData> data = new ArrayList<>();
+        data.add(new reporter.EndorsementData(1, 1, 1, "SOURCE", "A", 1.0));
+        data.add(new reporter.EndorsementData(1, 1, 1, "SOURCE", "B", 2.0));
+        data.add(new reporter.EndorsementData(1, 1, 1, "SOURCE", "C", 3.0));
+        Reporter.addEndorsementData(data);
+
+        System.setProperty("reporter.maxRowsPerSheet", "3");
+        try {
+            Reporter.write();
+        } finally {
+            System.clearProperty("reporter.maxRowsPerSheet");
+        }
+
+        File workbookFile = newestWorkbookInOutputDirectory(new File(Configuration.OUTPUT_DIRECTORY));
+        try (Workbook workbook = WorkbookFactory.create(workbookFile)) {
+            assertTrue("first endorsement sheet should exist", workbook.getSheet("Endorsements") != null);
+            assertTrue("second endorsement sheet should exist after row rollover", workbook.getSheet("Endorsements_2") != null);
+            assertEquals("first endorsement sheet should contain header plus two rows",
+                    2, workbook.getSheet("Endorsements").getLastRowNum());
+            assertEquals("second endorsement sheet should contain header plus one row",
+                    1, workbook.getSheet("Endorsements_2").getLastRowNum());
+        } catch (Exception ex) {
+            throw new AssertionError("split endorsement workbook should be readable: " + ex);
+        } finally {
+            Reporter.clear();
+        }
+
         passed++;
     }
 

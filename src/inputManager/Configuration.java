@@ -17,9 +17,10 @@ import java.util.Map;
 import java.util.Set;
 
 public class Configuration {
-    public final static String DEFAULT_FILE_NAME = "FAKENEWS_BASELINE";
+    public final static String DEFAULT_FILE_NAME = "FAKENEWS_BASELINE_2";
     public final static int DISABLED = -1;
     public final static int MEMORY_INFINITE = -1;
+    private final static int EXCEL_DISABLED = 0;
     private final static int CUSTOMIZED_SCENARIO = -2;
 
     private final static int D_PERIODS = 30;
@@ -41,6 +42,7 @@ public class Configuration {
     private final static boolean D_SAVED_AGENT_DECISIONS = false;
     private final static boolean D_SAVED_DETAILED_AGENT_DECISIONS = false;
     private final static boolean D_SAVED_REPOSTS_PER_SOURCE = false;
+    private final static long LARGE_EXPERIMENT_OPERATIONS_WARNING_THRESHOLD = 1_000_000L;
 
     private final static String PERIODS_KEY = "PERIODS";
     private final static String AGENTS_KEY = "AGENTS";
@@ -112,7 +114,7 @@ public class Configuration {
         MEMORY = conf.get(MEMORY_KEY) != null ? conf.get(MEMORY_KEY).intValue() : D_MEMORY;
         SOURCE_REACH = conf.get(SOURCE_REACH_KEY) != null ? conf.get(SOURCE_REACH_KEY) == 1 : D_SOURCE_REACH;
         WOM = conf.get(WOM_KEY) != null ? conf.get(WOM_KEY) == 1 : D_WOM;
-        SCENARIO = conf.get(SCENARIO_KEY) != null ? conf.get(SCENARIO_KEY).intValue() : D_SCENARIO;
+        SCENARIO = conf.get(SCENARIO_KEY) != null ? normalizeScenario(conf.get(SCENARIO_KEY).intValue()) : D_SCENARIO;
         LEARNING_PERIODS = conf.get(LEARNING_PERIODS_KEY) != null ? conf.get(LEARNING_PERIODS_KEY).intValue() : D_LEARNING_PERIODS;
 
         COMPRESSED_RESULTS = conf.get(COMPRESSED_RESULTS_KEY) != null ? conf.get(COMPRESSED_RESULTS_KEY) == 1 : D_COMPRESSED_RESULTS;
@@ -120,6 +122,8 @@ public class Configuration {
         SAVED_AGENT_DECISIONS = conf.get(SAVED_AGENT_DECISIONS_KEY) != null ? conf.get(SAVED_AGENT_DECISIONS_KEY) == 1 : D_SAVED_AGENT_DECISIONS;
         SAVED_DETAILED_AGENT_DECISIONS = conf.get(SAVED_DETAILED_AGENT_DECISIONS_KEY) != null ? conf.get(SAVED_DETAILED_AGENT_DECISIONS_KEY) == 1 : D_SAVED_DETAILED_AGENT_DECISIONS;
         SAVED_REPOSTS_PER_SOURCE = conf.get(SAVED_REPOSTS_PER_SOURCE_KEY) != null ? conf.get(SAVED_REPOSTS_PER_SOURCE_KEY) == 1 : D_SAVED_REPOSTS_PER_SOURCE;
+
+        warnIfLargeExperimentSavesDetailedResults();
     }
 
     private static void creatingOutputFolder(String output) {
@@ -211,7 +215,7 @@ public class Configuration {
                 WOM = value == 1;
                 break;
             case SCENARIO_KEY:
-                SCENARIO = (int) value;
+                SCENARIO = normalizeScenario((int) value);
                 break;
             case LEARNING_PERIODS_KEY:
                 LEARNING_PERIODS = (int) value;
@@ -331,10 +335,15 @@ public class Configuration {
         if (conf.containsKey(SCENARIO_KEY)) {
             validateInteger(conf, SCENARIO_KEY);
             int scenario = conf.get(SCENARIO_KEY).intValue();
-            if (scenario != DISABLED && scenario != CUSTOMIZED_SCENARIO) {
-                failConfiguration(SCENARIO_KEY + " must be " + DISABLED + " or " + CUSTOMIZED_SCENARIO + ".");
+            if (scenario != EXCEL_DISABLED && scenario != DISABLED && scenario != CUSTOMIZED_SCENARIO) {
+                failConfiguration(SCENARIO_KEY + " must be " + EXCEL_DISABLED + " (disabled), " +
+                        DISABLED + " (disabled legacy), or " + CUSTOMIZED_SCENARIO + " (customized).");
             }
         }
+    }
+
+    private static int normalizeScenario(int scenario) {
+        return scenario == EXCEL_DISABLED ? DISABLED : scenario;
     }
 
     private static void validateBoolean(HashMap<String, Double> conf, String param) {
@@ -348,6 +357,48 @@ public class Configuration {
 
     private static void failConfiguration(String message) {
         throw new IllegalArgumentException("Invalid configuration: " + message);
+    }
+
+    private static void warnIfLargeExperimentSavesDetailedResults() {
+        if (!SAVED_ENDORSEMENTS && !SAVED_AGENT_DECISIONS && !SAVED_DETAILED_AGENT_DECISIONS &&
+                !SAVED_REPOSTS_PER_SOURCE) {
+            return;
+        }
+
+        long simulationRuns = (long) REPETITIONS + 1L;
+        long agentPeriodOperations = simulationRuns * PERIODS * AGENTS;
+        if (agentPeriodOperations < LARGE_EXPERIMENT_OPERATIONS_WARNING_THRESHOLD) {
+            return;
+        }
+
+        String enabledDetails = enabledDetailedResultKeys();
+        Console.warn("Configuration: large experiment configured with detailed result saving enabled (" +
+                enabledDetails + "). Estimated agent-period operations=" + agentPeriodOperations +
+                " from runs=" + simulationRuns +
+                ", periods=" + PERIODS +
+                ", agents=" + AGENTS +
+                ". This can create very large workbooks and slow execution; disable unneeded SAVED_* options " +
+                "or enable COMPRESSED_RESULTS for large experiments.");
+    }
+
+    private static String enabledDetailedResultKeys() {
+        StringBuilder keys = new StringBuilder();
+        appendEnabledKey(keys, SAVED_ENDORSEMENTS, SAVED_ENDORSEMENTS_KEY);
+        appendEnabledKey(keys, SAVED_AGENT_DECISIONS, SAVED_AGENT_DECISIONS_KEY);
+        appendEnabledKey(keys, SAVED_DETAILED_AGENT_DECISIONS, SAVED_DETAILED_AGENT_DECISIONS_KEY);
+        appendEnabledKey(keys, SAVED_REPOSTS_PER_SOURCE, SAVED_REPOSTS_PER_SOURCE_KEY);
+        return keys.toString();
+    }
+
+    private static void appendEnabledKey(StringBuilder keys, boolean enabled, String key) {
+        if (!enabled) {
+            return;
+        }
+
+        if (keys.length() > 0) {
+            keys.append(", ");
+        }
+        keys.append(key);
     }
 
     public static Map<String, Double> toMap() {
